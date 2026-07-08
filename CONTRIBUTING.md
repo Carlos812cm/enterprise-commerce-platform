@@ -26,20 +26,29 @@ Use Conventional Commits:
 
 ```text
 <type>(<scope>): <description>
+```
 
 Examples:
 
+```text
 feat(inventory): add atomic stock reservation
 fix(checkout): prevent duplicate order submission
 docs(adr): record monorepo decision
 ci(github): add pull request validation workflow
-Local Checks
+```
+
+## Local Checks
+
+```bash
 dotnet restore
 dotnet build --configuration Release
 docker compose up -d
-Architecture Rules
-Domain projects must not depend on Infrastructure.
-Modules must not write to another module's data store directly.
-Business logic must not live in API endpoints.
-Critical operations must be idempotent.
-Integration events must be versioned contracts.
+```
+
+## Architecture Rules
+
+- Domain projects must not depend on Infrastructure.
+- Modules must not write to another module's data store directly.
+- Business logic must not live in API endpoints.
+- Critical operations must be idempotent.
+- Integration events must be versioned contracts.
