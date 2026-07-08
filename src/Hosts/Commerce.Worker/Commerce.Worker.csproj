@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Modules\Catalog\Catalog.Application\Catalog.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\Catalog\Catalog.Infrastructure\Catalog.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Catalog\Catalog.Contracts\Catalog.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\Pricing\Pricing.Application\Pricing.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\Pricing\Pricing.Infrastructure\Pricing.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Pricing\Pricing.Contracts\Pricing.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\Inventory\Inventory.Application\Inventory.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\Inventory\Inventory.Infrastructure\Inventory.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Inventory\Inventory.Contracts\Inventory.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\Cart\Cart.Application\Cart.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\Cart\Cart.Infrastructure\Cart.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Cart\Cart.Contracts\Cart.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\Checkout\Checkout.Application\Checkout.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\Checkout\Checkout.Infrastructure\Checkout.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Checkout\Checkout.Contracts\Checkout.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\Ordering\Ordering.Application\Ordering.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\Ordering\Ordering.Infrastructure\Ordering.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Ordering\Ordering.Contracts\Ordering.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\Payments\Payments.Application\Payments.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\Payments\Payments.Infrastructure\Payments.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Payments\Payments.Contracts\Payments.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\B2BProcurement\B2BProcurement.Application\B2BProcurement.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\B2BProcurement\B2BProcurement.Infrastructure\B2BProcurement.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\B2BProcurement\B2BProcurement.Contracts\B2BProcurement.Contracts.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

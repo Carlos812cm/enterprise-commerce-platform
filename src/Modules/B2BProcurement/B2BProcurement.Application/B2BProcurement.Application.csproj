@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\B2BProcurement.Domain\B2BProcurement.Domain.csproj" />
+    <ProjectReference Include="..\B2BProcurement.Contracts\B2BProcurement.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Commerce.Application\Commerce.Application.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

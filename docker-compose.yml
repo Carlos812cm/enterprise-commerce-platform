@@ -1,0 +1,63 @@
+services:
+  postgres:
+    image: postgres:18.4
+    container_name: commerce-postgres
+    environment:
+      POSTGRES_USER: commerce
+      POSTGRES_PASSWORD: commerce_dev_password
+      POSTGRES_DB: commerce
+    ports:
+      - "5432:5432"
+    volumes:
+      - commerce_postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U commerce -d commerce"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:8.4.4
+    container_name: commerce-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "16379:6379"  # <--- Cambiado de 6379 a 16379 para esquivar el bloqueo de Windows
+    volumes:
+      - commerce_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:4.3-management
+    container_name: commerce-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: commerce
+      RABBITMQ_DEFAULT_PASS: commerce_dev_password
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - commerce_rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.6.4
+    container_name: commerce-keycloak
+    command: ["start-dev"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+
+volumes:
+  commerce_postgres_data:
+  commerce_redis_data:
+  commerce_rabbitmq_data:

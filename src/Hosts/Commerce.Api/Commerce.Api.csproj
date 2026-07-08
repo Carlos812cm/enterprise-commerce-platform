@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Modules\Catalog\Catalog.Api\Catalog.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Pricing\Pricing.Api\Pricing.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Inventory\Inventory.Api\Inventory.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Cart\Cart.Api\Cart.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Checkout\Checkout.Api\Checkout.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Ordering\Ordering.Api\Ordering.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Payments\Payments.Api\Payments.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\B2BProcurement\B2BProcurement.Api\B2BProcurement.Api.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

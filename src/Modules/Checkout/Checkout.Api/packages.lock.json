@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "dependencies": {
+    "net10.0": {
+      "checkout.application": {
+        "type": "Project",
+        "dependencies": {
+          "Checkout.Contracts": "[1.0.0, )",
+          "Checkout.Domain": "[1.0.0, )",
+          "Commerce.Application": "[1.0.0, )"
+        }
+      },
+      "checkout.contracts": {
+        "type": "Project",
+        "dependencies": {
+          "Commerce.Contracts": "[1.0.0, )"
+        }
+      },
+      "checkout.domain": {
+        "type": "Project",
+        "dependencies": {
+          "Commerce.Domain": "[1.0.0, )"
+        }
+      },
+      "commerce.application": {
+        "type": "Project",
+        "dependencies": {
+          "Commerce.Contracts": "[1.0.0, )",
+          "Commerce.Domain": "[1.0.0, )"
+        }
+      },
+      "commerce.contracts": {
+        "type": "Project"
+      },
+      "commerce.domain": {
+        "type": "Project"
+      }
+    }
+  }
+}

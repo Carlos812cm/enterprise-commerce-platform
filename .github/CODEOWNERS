@@ -1,0 +1,15 @@
+* @your-github-user
+
+/docs/architecture/ @your-github-user
+/docs/adr/ @your-github-user
+/.github/ @your-github-user
+/deploy/ @your-github-user
+/scripts/ @your-github-user
+
+/src/Modules/Catalog/ @your-github-user
+/src/Modules/Pricing/ @your-github-user
+/src/Modules/Inventory/ @your-github-user
+/src/Modules/Checkout/ @your-github-user
+/src/Modules/Ordering/ @your-github-user
+/src/Modules/Payments/ @your-github-user
+/src/Modules/B2BProcurement/ @your-github-user
