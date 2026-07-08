@@ -58,9 +58,7 @@ jobs:
         run: >
           dotnet test "$SOLUTION_FILE"
           --configuration Release
-          --no-build
-          --logger "trx;LogFilePrefix=test-results"
-          --results-directory TestResults
+          --no-restore
 
       - name: Validate Docker Compose configuration
         run: docker compose config > /dev/null
