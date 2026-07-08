@@ -47,11 +47,12 @@ No business logic has been implemented yet. This repository currently contains:
 dotnet restore
 dotnet build
 docker compose up -d
+```
 
-Documentation
+## Documentation
 
-See /docs.
+See `/docs`.
 
-Architecture Decision Records
+## Architecture Decision Records
 
-See /docs/adr.
+See `/docs/adr`.
