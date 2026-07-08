@@ -68,4 +68,8 @@
     <Project Path="src/Modules/Pricing/Pricing.Domain/Pricing.Domain.csproj" />
     <Project Path="src/Modules/Pricing/Pricing.Infrastructure/Pricing.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/Architecture/">
+    <Project Path="tests/Architecture/Commerce.ArchitectureTests/Commerce.ArchitectureTests.csproj" />
+  </Folder>
 </Solution>

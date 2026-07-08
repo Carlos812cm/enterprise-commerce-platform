@@ -1,0 +1,66 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  SOLUTION_FILE: EnterpriseCommercePlatform.slnx
+
+jobs:
+  validate:
+    name: Restore, format, build, test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Display .NET info
+        run: dotnet --info
+
+      - name: Restore dependencies in locked mode
+        run: dotnet restore "$SOLUTION_FILE" --locked-mode
+
+      - name: Verify formatting
+        run: >
+          dotnet format "$SOLUTION_FILE"
+          --verify-no-changes
+          --verbosity diagnostic
+          --no-restore
+
+      - name: Build solution
+        run: >
+          dotnet build "$SOLUTION_FILE"
+          --configuration Release
+          --no-restore
+
+      - name: Run tests
+        run: >
+          dotnet test "$SOLUTION_FILE"
+          --configuration Release
+          --no-build
+          --logger "trx;LogFilePrefix=test-results"
+          --results-directory TestResults
+
+      - name: Validate Docker Compose configuration
+        run: docker compose config > /dev/null
