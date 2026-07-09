@@ -374,7 +374,7 @@ public sealed class ProjectDependencyRulesTests
     {
         var segments = relativePath.Split('/');
 
-        if (segments is [ "src", "Modules", var moduleName, .. ])
+        if (segments is ["src", "Modules", var moduleName, ..])
         {
             return moduleName;
         }
