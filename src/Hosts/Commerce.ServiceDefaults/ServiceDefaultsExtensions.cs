@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -11,7 +12,6 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
 using Serilog.Events;
-using System.Globalization;
 
 namespace Commerce.ServiceDefaults;
 
@@ -62,8 +62,8 @@ public static class ServiceDefaultsExtensions
                 .Enrich.WithProperty("Environment", builder.Environment.EnvironmentName)
                 .WriteTo.Console(
                     outputTemplate:
-                        "[{Timestamp:HH:mm:ss} {Level:u3}] {Application} {Message:lj} {Properties:j}{NewLine}{Exception}",
-                            formatProvider: CultureInfo.InvariantCulture);
+                    "[{Timestamp:HH:mm:ss} {Level:u3}] {Application} {Message:lj} {Properties:j}{NewLine}{Exception}",
+                    formatProvider: CultureInfo.InvariantCulture);
         });
     }
 
