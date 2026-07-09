@@ -245,6 +245,11 @@ public sealed class ProjectDependencyRulesTests
 
     private static bool IsAllowedApiHostReference(ProjectReferenceDescriptor reference)
     {
+        if (IsServiceDefaultsReference(reference))
+        {
+            return true;
+        }
+
         return
             reference.ModuleName is not null &&
             reference.Layer == ProjectLayer.Api;
@@ -252,6 +257,11 @@ public sealed class ProjectDependencyRulesTests
 
     private static bool IsAllowedWorkerHostReference(ProjectReferenceDescriptor reference)
     {
+        if (IsServiceDefaultsReference(reference))
+        {
+            return true;
+        }
+
         if (reference.Name is
             "Commerce.Application" or
             "Commerce.Infrastructure" or
@@ -266,6 +276,11 @@ public sealed class ProjectDependencyRulesTests
                 ProjectLayer.Application or
                 ProjectLayer.Infrastructure or
                 ProjectLayer.Contracts;
+    }
+
+    private static bool IsServiceDefaultsReference(ProjectReferenceDescriptor reference)
+    {
+        return reference.Name == "Commerce.ServiceDefaults";
     }
 
     private static ProjectDescriptor[] LoadSourceProjects()

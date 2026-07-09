@@ -9,6 +9,7 @@
     <ProjectReference Include="..\..\Modules\Ordering\Ordering.Api\Ordering.Api.csproj" />
     <ProjectReference Include="..\..\Modules\Payments\Payments.Api\Payments.Api.csproj" />
     <ProjectReference Include="..\..\Modules\B2BProcurement\B2BProcurement.Api\B2BProcurement.Api.csproj" />
+    <ProjectReference Include="..\Commerce.ServiceDefaults\Commerce.ServiceDefaults.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
