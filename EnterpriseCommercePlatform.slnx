@@ -9,6 +9,7 @@
   </Folder>
   <Folder Name="/src/Hosts/">
     <Project Path="src/Hosts/Commerce.Api/Commerce.Api.csproj" />
+    <Project Path="src/Hosts/Commerce.ServiceDefaults/Commerce.ServiceDefaults.csproj" />
     <Project Path="src/Hosts/Commerce.Worker/Commerce.Worker.csproj" />
   </Folder>
   <Folder Name="/src/Modules/" />

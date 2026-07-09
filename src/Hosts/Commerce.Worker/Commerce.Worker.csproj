@@ -25,6 +25,11 @@
     <ProjectReference Include="..\..\Modules\B2BProcurement\B2BProcurement.Application\B2BProcurement.Application.csproj" />
     <ProjectReference Include="..\..\Modules\B2BProcurement\B2BProcurement.Infrastructure\B2BProcurement.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\B2BProcurement\B2BProcurement.Contracts\B2BProcurement.Contracts.csproj" />
+    <ProjectReference Include="..\Commerce.ServiceDefaults\Commerce.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
   </ItemGroup>
 
   <PropertyGroup>
