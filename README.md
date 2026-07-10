@@ -43,11 +43,24 @@ No business logic has been implemented yet. This repository currently contains:
 
 ## Run Locally
 
+```md
+## Run Locally
+
+Build and start the application hosts and local infrastructure:
+
 ```bash
-dotnet restore
-dotnet build
-docker compose up -d
-```
+docker compose up --build --detach
+docker compose ps
+
+Validate the API:
+
+curl http://localhost:5000/
+curl http://localhost:5000/health/live
+curl http://localhost:5000/health/ready
+
+Stop the environment without deleting persistent data:
+
+docker compose down
 
 ## Documentation
 

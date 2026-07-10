@@ -1,61 +1,128 @@
 services:
+  commerce-api:
+    image: enterprise-commerce-api:local
+    build:
+      context: .
+      dockerfile: src/Hosts/Commerce.Api/Dockerfile
+      args:
+        DOTNET_SDK_VERSION: ${DOTNET_SDK_VERSION:-10.0.301}
+        DOTNET_RUNTIME_VERSION: ${DOTNET_RUNTIME_VERSION:-10.0.9}
+        BUILD_CONFIGURATION: Release
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+    ports:
+      - "${COMMERCE_API_PORT:-5000}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 20s
+
+  commerce-worker:
+    image: enterprise-commerce-worker:local
+    build:
+      context: .
+      dockerfile: src/Hosts/Commerce.Worker/Dockerfile
+      args:
+        DOTNET_SDK_VERSION: ${DOTNET_SDK_VERSION:-10.0.301}
+        DOTNET_RUNTIME_VERSION: ${DOTNET_RUNTIME_VERSION:-10.0.9}
+        BUILD_CONFIGURATION: Release
+    environment:
+      DOTNET_ENVIRONMENT: Development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 20s
+
   postgres:
     image: postgres:18.4
     container_name: commerce-postgres
     environment:
-      POSTGRES_USER: commerce
-      POSTGRES_PASSWORD: commerce_dev_password
-      POSTGRES_DB: commerce
+      POSTGRES_USER: ${POSTGRES_USER:-commerce}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-commerce_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-commerce}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - commerce_postgres_data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U commerce -d commerce"]
+      test:
+        - CMD-SHELL
+        - pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
 
   redis:
     image: redis:8.4.4
     container_name: commerce-redis
-    command: ["redis-server", "--appendonly", "yes"]
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
     ports:
-      - "16379:6379"  # <--- Cambiado de 6379 a 16379 para esquivar el bloqueo de Windows
+      - "${REDIS_PORT:-16379}:6379"
     volumes:
       - commerce_redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test:
+        - CMD
+        - redis-cli
+        - ping
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 5s
 
   rabbitmq:
     image: rabbitmq:4.3-management
     container_name: commerce-rabbitmq
     environment:
-      RABBITMQ_DEFAULT_USER: commerce
-      RABBITMQ_DEFAULT_PASS: commerce_dev_password
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-commerce}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-commerce_dev_password}
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
     volumes:
       - commerce_rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      test:
+        - CMD
+        - rabbitmq-diagnostics
+        - -q
+        - ping
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.6.4
     container_name: commerce-keycloak
-    command: ["start-dev"]
+    command:
+      - start-dev
     environment:
-      KC_BOOTSTRAP_ADMIN_USERNAME: admin
-      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD:-admin}
     ports:
-      - "8080:8080"
+      - "${KEYCLOAK_PORT:-8080}:8080"
 
 volumes:
   commerce_postgres_data:
