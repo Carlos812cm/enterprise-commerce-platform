@@ -6,6 +6,7 @@ readonly api_image="${API_IMAGE:-enterprise-commerce-api:ci}"
 readonly worker_image="${WORKER_IMAGE:-enterprise-commerce-worker:ci}"
 readonly diagnostics_dir="${SMOKE_DIAGNOSTICS_DIR:-artifacts/smoke}"
 readonly network_name="commerce-smoke"
+readonly rabbitmq_volume="commerce-rabbitmq-smoke-data"
 
 readonly postgres_container="commerce-postgres-smoke"
 readonly redis_container="commerce-redis-smoke"
@@ -47,7 +48,7 @@ capture_diagnostics() {
 cleanup() {
   capture_diagnostics
 
-  docker rm --force \
+  docker rm --force --volumes \
     "$api_container" \
     "$worker_container" \
     "$postgres_container" \
@@ -56,6 +57,7 @@ cleanup() {
     > /dev/null 2>&1 || true
 
   docker network rm "$network_name" > /dev/null 2>&1 || true
+  docker volume rm "$rabbitmq_volume" > /dev/null 2>&1 || true
 }
 
 wait_for_command() {
@@ -172,11 +174,28 @@ validate_non_root() {
   fi
 }
 
+initialize_rabbitmq_volume() {
+  docker volume create "$rabbitmq_volume" > /dev/null
+
+  docker run --rm \
+    --volume "$rabbitmq_volume:/var/lib/rabbitmq" \
+    --entrypoint sh \
+    rabbitmq:4.3-management \
+    -c '
+      set -eu
+      printf "%s" "commerce-smoke-erlang-cookie" > /var/lib/rabbitmq/.erlang.cookie
+      chown -R rabbitmq:rabbitmq /var/lib/rabbitmq
+      chmod 700 /var/lib/rabbitmq
+      chmod 600 /var/lib/rabbitmq/.erlang.cookie
+    '
+}
+
 trap cleanup EXIT
 
 cleanup
 
 docker network create "$network_name" > /dev/null
+initialize_rabbitmq_volume
 
 docker run \
   --detach \
@@ -199,6 +218,7 @@ docker run \
   --detach \
   --name "$rabbitmq_container" \
   --network "$network_name" \
+  --volume "$rabbitmq_volume:/var/lib/rabbitmq" \
   --env RABBITMQ_DEFAULT_USER=commerce \
   --env RABBITMQ_DEFAULT_PASS=commerce_dev_password \
   rabbitmq:4.3-management
