@@ -68,8 +68,8 @@ public static class ServiceDefaultsExtensions
     }
 
     private static void ConfigureOpenTelemetry(
-    this IHostApplicationBuilder builder,
-    string serviceName)
+        this IHostApplicationBuilder builder,
+        string serviceName)
     {
         var serviceVersion =
             Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ??
