@@ -36,6 +36,7 @@ wait_for_command() {
     sleep 1
   done
 
+  echo "Command did not become successful in container: $container_name"
   docker logs "$container_name"
   return 1
 }
@@ -57,6 +58,7 @@ wait_for_health() {
     fi
 
     if [[ "$health_status" == "unhealthy" ]]; then
+      echo "Container became unhealthy: $container_name"
       docker logs "$container_name"
       return 1
     fi
@@ -64,6 +66,56 @@ wait_for_health() {
     sleep 1
   done
 
+  echo "Container did not become healthy: $container_name"
+  docker logs "$container_name"
+  return 1
+}
+
+wait_for_http() {
+  local url="$1"
+  local diagnostic_container="$2"
+
+  for attempt in $(seq 1 90); do
+    if curl \
+      --fail \
+      --silent \
+      --show-error \
+      --max-time 2 \
+      "$url" \
+      > /dev/null 2>&1; then
+      return 0
+    fi
+
+    sleep 1
+  done
+
+  echo "HTTP endpoint did not become ready: $url"
+  curl --include --max-time 5 "$url" || true
+  docker logs "$diagnostic_container"
+  return 1
+}
+
+wait_for_container_http() {
+  local container_name="$1"
+  local url="$2"
+
+  for attempt in $(seq 1 90); do
+    if docker exec "$container_name" \
+      curl \
+      --fail \
+      --silent \
+      --show-error \
+      --max-time 2 \
+      "$url" \
+      > /dev/null 2>&1; then
+      return 0
+    fi
+
+    sleep 1
+  done
+
+  echo "Container HTTP endpoint did not become ready: $container_name $url"
+  docker exec "$container_name" curl --include --max-time 5 "$url" || true
   docker logs "$container_name"
   return 1
 }
@@ -164,6 +216,14 @@ docker run \
 
 wait_for_health "$api_container"
 wait_for_health "$worker_container"
+
+wait_for_http \
+  http://127.0.0.1:5000/health/ready \
+  "$api_container"
+
+wait_for_container_http \
+  "$worker_container" \
+  http://127.0.0.1:8080/health/ready
 
 curl \
   --fail \
