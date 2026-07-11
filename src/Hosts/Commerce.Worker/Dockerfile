@@ -29,10 +29,33 @@ RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
 
 FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_RUNTIME_VERSION} AS final
 
+USER root
+
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 COPY --from=build --chown=app:app /app/publish .
 
+ENV ASPNETCORE_HTTP_PORTS=8080
+
+EXPOSE 8080
+
 USER app
+
+HEALTHCHECK \
+    --interval=10s \
+    --timeout=3s \
+    --start-period=20s \
+    --retries=3 \
+    CMD curl \
+        --fail \
+        --silent \
+        --show-error \
+        --max-time 2 \
+        http://127.0.0.1:8080/health/live \
+        || exit 1
 
 ENTRYPOINT ["dotnet", "Commerce.Worker.dll"]

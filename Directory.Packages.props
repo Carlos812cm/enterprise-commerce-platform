@@ -15,6 +15,11 @@
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="10.7.0" />
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.7.0" />
 
+    <!-- Infrastructure client integrations -->
+    <PackageVersion Include="Aspire.Npgsql" Version="13.4.6" />
+    <PackageVersion Include="Aspire.StackExchange.Redis" Version="13.4.6" />
+    <PackageVersion Include="Aspire.RabbitMQ.Client" Version="13.4.6" />
+
     <!-- OpenTelemetry -->
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.16.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.16.0" />

@@ -31,3 +31,9 @@ Future infrastructure checks will include:
 Liveness checks must stay lightweight.
 
 Readiness checks may validate dependencies, but they must avoid expensive queries or operations that could overload infrastructure.
+
+```text
+self
+PostgreSQL
+Redis
+RabbitMQ
