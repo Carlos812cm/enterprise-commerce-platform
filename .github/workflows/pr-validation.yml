@@ -121,3 +121,12 @@ jobs:
           API_IMAGE: enterprise-commerce-api:ci
           WORKER_IMAGE: enterprise-commerce-worker:ci
         run: bash scripts/ci/smoke-containers.sh
+
+      - name: Upload container smoke diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: container-smoke-diagnostics
+          path: artifacts/smoke
+          if-no-files-found: warn
+          retention-days: 7
