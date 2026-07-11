@@ -61,6 +61,7 @@ jobs:
           dotnet test "$SOLUTION_FILE"
           --configuration Release
           --no-restore
+
       - name: Validate Docker Compose configuration
         run: docker compose config > /dev/null
 
@@ -71,6 +72,7 @@ jobs:
           -f deploy/compose/observability.yml
           config
           > /dev/null
+
       - name: Validate OpenTelemetry Collector configuration
         shell: bash
         run: |
