@@ -4,6 +4,7 @@ set -Eeuo pipefail
 
 readonly api_image="${API_IMAGE:-enterprise-commerce-api:ci}"
 readonly worker_image="${WORKER_IMAGE:-enterprise-commerce-worker:ci}"
+readonly diagnostics_dir="${SMOKE_DIAGNOSTICS_DIR:-artifacts/smoke}"
 readonly network_name="commerce-smoke"
 
 readonly postgres_container="commerce-postgres-smoke"
@@ -12,7 +13,40 @@ readonly rabbitmq_container="commerce-rabbitmq-smoke"
 readonly api_container="commerce-api-smoke"
 readonly worker_container="commerce-worker-smoke"
 
+mkdir -p "$diagnostics_dir"
+exec > >(tee "$diagnostics_dir/smoke.log") 2>&1
+
+capture_container_diagnostics() {
+  local container_name="$1"
+
+  if ! docker inspect "$container_name" > /dev/null 2>&1; then
+    return 0
+  fi
+
+  docker inspect "$container_name" \
+    > "$diagnostics_dir/$container_name-inspect.json" \
+    2>&1 || true
+
+  docker logs "$container_name" \
+    > "$diagnostics_dir/$container_name.log" \
+    2>&1 || true
+}
+
+capture_diagnostics() {
+  capture_container_diagnostics "$api_container"
+  capture_container_diagnostics "$worker_container"
+  capture_container_diagnostics "$postgres_container"
+  capture_container_diagnostics "$redis_container"
+  capture_container_diagnostics "$rabbitmq_container"
+
+  docker network inspect "$network_name" \
+    > "$diagnostics_dir/$network_name-inspect.json" \
+    2>&1 || true
+}
+
 cleanup() {
+  capture_diagnostics
+
   docker rm --force \
     "$api_container" \
     "$worker_container" \
@@ -185,6 +219,12 @@ wait_for_command \
   rabbitmq-diagnostics \
   -q \
   ping
+
+wait_for_command \
+  "$rabbitmq_container" \
+  rabbitmq-diagnostics \
+  -q \
+  check_port_connectivity
 
 validate_non_root "$api_image"
 validate_non_root "$worker_image"
