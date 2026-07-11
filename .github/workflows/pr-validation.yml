@@ -19,12 +19,14 @@ env:
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   SOLUTION_FILE: EnterpriseCommercePlatform.slnx
+  OTEL_COLLECTOR_IMAGE: otel/opentelemetry-collector-contrib:0.156.0
+  PROMETHEUS_IMAGE: prom/prometheus:v3.13.0
 
 jobs:
   validate:
     name: Restore, format, build, test
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 50
 
     steps:
       - name: Checkout repository
@@ -59,9 +61,34 @@ jobs:
           dotnet test "$SOLUTION_FILE"
           --configuration Release
           --no-restore
-
       - name: Validate Docker Compose configuration
         run: docker compose config > /dev/null
+
+      - name: Validate observability Compose configuration
+        run: >
+          docker compose
+          -f docker-compose.yml
+          -f deploy/compose/observability.yml
+          config
+          > /dev/null
+      - name: Validate OpenTelemetry Collector configuration
+        shell: bash
+        run: |
+          docker run --rm \
+            --volume "$GITHUB_WORKSPACE/deploy/observability/otel-collector/config.yaml:/etc/otelcol-contrib/config.yaml:ro" \
+            "$OTEL_COLLECTOR_IMAGE" \
+            validate \
+            --config=/etc/otelcol-contrib/config.yaml
+
+      - name: Validate Prometheus configuration
+        shell: bash
+        run: |
+          docker run --rm \
+            --entrypoint /bin/promtool \
+            --volume "$GITHUB_WORKSPACE/deploy/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro" \
+            "$PROMETHEUS_IMAGE" \
+            check config \
+            /etc/prometheus/prometheus.yml
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4

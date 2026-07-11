@@ -62,14 +62,14 @@ public static class ServiceDefaultsExtensions
                 .Enrich.WithProperty("Environment", builder.Environment.EnvironmentName)
                 .WriteTo.Console(
                     outputTemplate:
-                    "[{Timestamp:HH:mm:ss} {Level:u3}] {Application} {Message:lj} {Properties:j}{NewLine}{Exception}",
+                    "[{Timestamp:HH:mm:ss} {Level:u3}] {Application} TraceId={TraceId} SpanId={SpanId} {Message:lj} {Properties:j}{NewLine}{Exception}",
                     formatProvider: CultureInfo.InvariantCulture);
         });
     }
 
     private static void ConfigureOpenTelemetry(
-        this IHostApplicationBuilder builder,
-        string serviceName)
+    this IHostApplicationBuilder builder,
+    string serviceName)
     {
         var serviceVersion =
             Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ??
@@ -84,9 +84,14 @@ public static class ServiceDefaultsExtensions
                     serviceInstanceId: Environment.MachineName))
             .WithMetrics(metrics => metrics
                 .AddAspNetCoreInstrumentation()
-                .AddHttpClientInstrumentation())
+                .AddHttpClientInstrumentation()
+                .AddRuntimeInstrumentation())
             .WithTracing(tracing => tracing
-                .AddAspNetCoreInstrumentation()
+                .AddAspNetCoreInstrumentation(options =>
+                {
+                    options.Filter = context =>
+                        !context.Request.Path.StartsWithSegments("/health");
+                })
                 .AddHttpClientInstrumentation());
 
         if (!string.IsNullOrWhiteSpace(
