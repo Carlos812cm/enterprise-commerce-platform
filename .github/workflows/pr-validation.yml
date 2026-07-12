@@ -26,7 +26,7 @@ jobs:
   validate:
     name: Restore, format, build, test
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 60
 
     steps:
       - name: Checkout repository
@@ -61,6 +61,7 @@ jobs:
           dotnet test "$SOLUTION_FILE"
           --configuration Release
           --no-restore
+
       - name: Validate Docker Compose configuration
         run: docker compose config > /dev/null
 
@@ -71,6 +72,7 @@ jobs:
           -f deploy/compose/observability.yml
           config
           > /dev/null
+
       - name: Validate OpenTelemetry Collector configuration
         shell: bash
         run: |
@@ -115,97 +117,16 @@ jobs:
 
       - name: Smoke test container images
         shell: bash
-        run: |
-          set -Eeuo pipefail
+        env:
+          API_IMAGE: enterprise-commerce-api:ci
+          WORKER_IMAGE: enterprise-commerce-worker:ci
+        run: bash scripts/ci/smoke-containers.sh
 
-          cleanup() {
-            docker rm --force \
-              commerce-api-smoke \
-              commerce-worker-smoke \
-              >/dev/null 2>&1 || true
-          }
-
-          trap cleanup EXIT
-
-          api_user="$(
-            docker image inspect \
-              enterprise-commerce-api:ci \
-              --format '{{.Config.User}}'
-          )"
-
-          worker_user="$(
-            docker image inspect \
-              enterprise-commerce-worker:ci \
-              --format '{{.Config.User}}'
-          )"
-
-          if [[ -z "$api_user" || "$api_user" == "0" || "$api_user" == "root" ]]; then
-            echo "API image must run as a non-root user."
-            exit 1
-          fi
-
-          if [[ -z "$worker_user" || "$worker_user" == "0" || "$worker_user" == "root" ]]; then
-            echo "Worker image must run as a non-root user."
-            exit 1
-          fi
-
-          docker run \
-            --detach \
-            --name commerce-api-smoke \
-            --publish 5000:8080 \
-            --cap-drop ALL \
-            --security-opt no-new-privileges:true \
-            enterprise-commerce-api:ci
-
-          docker run \
-            --detach \
-            --name commerce-worker-smoke \
-            --cap-drop ALL \
-            --security-opt no-new-privileges:true \
-            enterprise-commerce-worker:ci
-
-          api_health=""
-
-          for attempt in $(seq 1 30); do
-            api_health="$(
-              docker inspect \
-                --format '{{.State.Health.Status}}' \
-                commerce-api-smoke \
-                2>/dev/null || true
-            )"
-
-            if [[ "$api_health" == "healthy" ]]; then
-              break
-            fi
-
-            if [[ "$api_health" == "unhealthy" ]]; then
-              docker logs commerce-api-smoke
-              exit 1
-            fi
-
-            sleep 1
-          done
-
-          if [[ "$api_health" != "healthy" ]]; then
-            docker logs commerce-api-smoke
-            echo "API container did not become healthy."
-            exit 1
-          fi
-
-          curl \
-            --fail \
-            --silent \
-            --show-error \
-            http://127.0.0.1:5000/health/live
-
-          worker_running="$(
-            docker inspect \
-              --format '{{.State.Running}}' \
-              commerce-worker-smoke
-          )"
-
-          if [[ "$worker_running" != "true" ]]; then
-            docker logs commerce-worker-smoke
-            echo "Worker container is not running."
-            exit 1
-          fi
+      - name: Upload container smoke diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: container-smoke-diagnostics
+          path: artifacts/smoke
+          if-no-files-found: warn
+          retention-days: 7

@@ -5,6 +5,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults("Commerce.Api");
 
+builder.AddInfrastructureClients("Commerce.Api");
+
 var app = builder.Build();
 
 app.MapDefaultEndpoints();

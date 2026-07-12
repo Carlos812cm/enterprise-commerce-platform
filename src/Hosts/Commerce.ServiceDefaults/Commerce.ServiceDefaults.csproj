@@ -22,5 +22,8 @@
     <PackageReference Include="Serilog.Enrichers.Environment" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
     <PackageReference Include="Serilog.Enrichers.Thread" />
+    <PackageReference Include="Aspire.Npgsql" />
+    <PackageReference Include="Aspire.StackExchange.Redis" />
+    <PackageReference Include="Aspire.RabbitMQ.Client" />
   </ItemGroup>
 </Project>

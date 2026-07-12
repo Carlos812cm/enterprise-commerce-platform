@@ -37,10 +37,7 @@ public static class ServiceDefaultsExtensions
             Predicate = registration => registration.Tags.Contains("live")
         });
 
-        endpoints.MapHealthChecks("/health/ready", new HealthCheckOptions
-        {
-            Predicate = registration => registration.Tags.Contains("ready")
-        });
+        endpoints.MapHealthChecks("/health/ready");
 
         return endpoints;
     }
@@ -121,6 +118,6 @@ public static class ServiceDefaultsExtensions
             .AddCheck(
                 "self",
                 () => HealthCheckResult.Healthy(),
-                tags: ["live", "ready"]);
+                tags: ["live"]);
     }
 }

@@ -1,0 +1,312 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+readonly api_image="${API_IMAGE:-enterprise-commerce-api:ci}"
+readonly worker_image="${WORKER_IMAGE:-enterprise-commerce-worker:ci}"
+readonly diagnostics_dir="${SMOKE_DIAGNOSTICS_DIR:-artifacts/smoke}"
+readonly network_name="commerce-smoke"
+readonly rabbitmq_volume="commerce-rabbitmq-smoke-data"
+
+readonly postgres_container="commerce-postgres-smoke"
+readonly redis_container="commerce-redis-smoke"
+readonly rabbitmq_container="commerce-rabbitmq-smoke"
+readonly api_container="commerce-api-smoke"
+readonly worker_container="commerce-worker-smoke"
+
+mkdir -p "$diagnostics_dir"
+exec > >(tee "$diagnostics_dir/smoke.log") 2>&1
+
+capture_container_diagnostics() {
+  local container_name="$1"
+
+  if ! docker inspect "$container_name" > /dev/null 2>&1; then
+    return 0
+  fi
+
+  docker inspect "$container_name" \
+    > "$diagnostics_dir/$container_name-inspect.json" \
+    2>&1 || true
+
+  docker logs "$container_name" \
+    > "$diagnostics_dir/$container_name.log" \
+    2>&1 || true
+}
+
+capture_diagnostics() {
+  capture_container_diagnostics "$api_container"
+  capture_container_diagnostics "$worker_container"
+  capture_container_diagnostics "$postgres_container"
+  capture_container_diagnostics "$redis_container"
+  capture_container_diagnostics "$rabbitmq_container"
+
+  docker network inspect "$network_name" \
+    > "$diagnostics_dir/$network_name-inspect.json" \
+    2>&1 || true
+}
+
+cleanup() {
+  capture_diagnostics
+
+  docker rm --force --volumes \
+    "$api_container" \
+    "$worker_container" \
+    "$postgres_container" \
+    "$redis_container" \
+    "$rabbitmq_container" \
+    > /dev/null 2>&1 || true
+
+  docker network rm "$network_name" > /dev/null 2>&1 || true
+  docker volume rm "$rabbitmq_volume" > /dev/null 2>&1 || true
+}
+
+wait_for_command() {
+  local container_name="$1"
+  shift
+
+  for attempt in $(seq 1 90); do
+    if docker exec "$container_name" "$@" > /dev/null 2>&1; then
+      return 0
+    fi
+
+    sleep 1
+  done
+
+  echo "Command did not become successful in container: $container_name"
+  docker logs "$container_name"
+  return 1
+}
+
+wait_for_health() {
+  local container_name="$1"
+  local health_status=""
+
+  for attempt in $(seq 1 90); do
+    health_status="$(
+      docker inspect \
+        --format '{{.State.Health.Status}}' \
+        "$container_name" \
+        2>/dev/null || true
+    )"
+
+    if [[ "$health_status" == "healthy" ]]; then
+      return 0
+    fi
+
+    if [[ "$health_status" == "unhealthy" ]]; then
+      echo "Container became unhealthy: $container_name"
+      docker logs "$container_name"
+      return 1
+    fi
+
+    sleep 1
+  done
+
+  echo "Container did not become healthy: $container_name"
+  docker logs "$container_name"
+  return 1
+}
+
+wait_for_http() {
+  local url="$1"
+  local diagnostic_container="$2"
+
+  for attempt in $(seq 1 90); do
+    if curl \
+      --fail \
+      --silent \
+      --show-error \
+      --max-time 2 \
+      "$url" \
+      > /dev/null 2>&1; then
+      return 0
+    fi
+
+    sleep 1
+  done
+
+  echo "HTTP endpoint did not become ready: $url"
+  curl --include --max-time 5 "$url" || true
+  docker logs "$diagnostic_container"
+  return 1
+}
+
+wait_for_container_http() {
+  local container_name="$1"
+  local url="$2"
+
+  for attempt in $(seq 1 90); do
+    if docker exec "$container_name" \
+      curl \
+      --fail \
+      --silent \
+      --show-error \
+      --max-time 2 \
+      "$url" \
+      > /dev/null 2>&1; then
+      return 0
+    fi
+
+    sleep 1
+  done
+
+  echo "Container HTTP endpoint did not become ready: $container_name $url"
+  docker exec "$container_name" curl --include --max-time 5 "$url" || true
+  docker logs "$container_name"
+  return 1
+}
+
+validate_non_root() {
+  local image_name="$1"
+  local configured_user=""
+
+  configured_user="$(
+    docker image inspect \
+      "$image_name" \
+      --format '{{.Config.User}}'
+  )"
+
+  if [[ -z "$configured_user" ||
+        "$configured_user" == "0" ||
+        "$configured_user" == "root" ]]; then
+    echo "$image_name must run as a non-root user."
+    return 1
+  fi
+}
+
+initialize_rabbitmq_volume() {
+  docker volume create "$rabbitmq_volume" > /dev/null
+
+  docker run --rm \
+    --volume "$rabbitmq_volume:/var/lib/rabbitmq" \
+    --entrypoint sh \
+    rabbitmq:4.3-management \
+    -c '
+      set -eu
+      printf "%s" "commerce-smoke-erlang-cookie" > /var/lib/rabbitmq/.erlang.cookie
+      chown -R rabbitmq:rabbitmq /var/lib/rabbitmq
+      chmod 700 /var/lib/rabbitmq
+      chmod 600 /var/lib/rabbitmq/.erlang.cookie
+    '
+}
+
+trap cleanup EXIT
+
+cleanup
+
+docker network create "$network_name" > /dev/null
+initialize_rabbitmq_volume
+
+docker run \
+  --detach \
+  --name "$postgres_container" \
+  --network "$network_name" \
+  --env POSTGRES_USER=commerce \
+  --env POSTGRES_PASSWORD=commerce_dev_password \
+  --env POSTGRES_DB=commerce \
+  postgres:18.4
+
+docker run \
+  --detach \
+  --name "$redis_container" \
+  --network "$network_name" \
+  redis:8.4.4 \
+  redis-server \
+  --appendonly yes
+
+docker run \
+  --detach \
+  --name "$rabbitmq_container" \
+  --network "$network_name" \
+  --volume "$rabbitmq_volume:/var/lib/rabbitmq" \
+  --env RABBITMQ_DEFAULT_USER=commerce \
+  --env RABBITMQ_DEFAULT_PASS=commerce_dev_password \
+  rabbitmq:4.3-management
+
+wait_for_command \
+  "$postgres_container" \
+  pg_isready \
+  -U commerce \
+  -d commerce
+
+wait_for_command \
+  "$redis_container" \
+  redis-cli \
+  ping
+
+wait_for_command \
+  "$rabbitmq_container" \
+  rabbitmq-diagnostics \
+  -q \
+  ping
+
+wait_for_command \
+  "$rabbitmq_container" \
+  rabbitmq-diagnostics \
+  -q \
+  check_port_connectivity
+
+validate_non_root "$api_image"
+validate_non_root "$worker_image"
+
+docker run \
+  --detach \
+  --name "$api_container" \
+  --network "$network_name" \
+  --publish 5000:8080 \
+  --cap-drop ALL \
+  --security-opt no-new-privileges:true \
+  --env ASPNETCORE_HTTP_PORTS=8080 \
+  --env "ConnectionStrings__Postgres=Host=$postgres_container;Port=5432;Database=commerce;Username=commerce;Password=commerce_dev_password;Pooling=true" \
+  --env "ConnectionStrings__Redis=$redis_container:6379,abortConnect=false" \
+  --env "ConnectionStrings__RabbitMq=amqp://commerce:commerce_dev_password@$rabbitmq_container:5672/" \
+  "$api_image"
+
+docker run \
+  --detach \
+  --name "$worker_container" \
+  --network "$network_name" \
+  --cap-drop ALL \
+  --security-opt no-new-privileges:true \
+  --env ASPNETCORE_HTTP_PORTS=8080 \
+  --env "ConnectionStrings__Postgres=Host=$postgres_container;Port=5432;Database=commerce;Username=commerce;Password=commerce_dev_password;Pooling=true" \
+  --env "ConnectionStrings__Redis=$redis_container:6379,abortConnect=false" \
+  --env "ConnectionStrings__RabbitMq=amqp://commerce:commerce_dev_password@$rabbitmq_container:5672/" \
+  "$worker_image"
+
+wait_for_health "$api_container"
+wait_for_health "$worker_container"
+
+wait_for_http \
+  http://127.0.0.1:5000/health/ready \
+  "$api_container"
+
+wait_for_container_http \
+  "$worker_container" \
+  http://127.0.0.1:8080/health/ready
+
+curl \
+  --fail \
+  --silent \
+  --show-error \
+  http://127.0.0.1:5000/health/live
+
+curl \
+  --fail \
+  --silent \
+  --show-error \
+  http://127.0.0.1:5000/health/ready
+
+docker exec "$worker_container" \
+  curl \
+  --fail \
+  --silent \
+  --show-error \
+  http://127.0.0.1:8080/health/live
+
+docker exec "$worker_container" \
+  curl \
+  --fail \
+  --silent \
+  --show-error \
+  http://127.0.0.1:8080/health/ready
