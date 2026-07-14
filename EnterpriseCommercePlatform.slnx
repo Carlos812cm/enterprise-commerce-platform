@@ -73,4 +73,7 @@
   <Folder Name="/tests/Architecture/">
     <Project Path="tests/Architecture/Commerce.ArchitectureTests/Commerce.ArchitectureTests.csproj" />
   </Folder>
+  <Folder Name="/tests/Unit/">
+    <Project Path="tests/Unit/Commerce.Domain.UnitTests/Commerce.Domain.UnitTests.csproj" />
+  </Folder>
 </Solution>
