@@ -13,7 +13,9 @@ public readonly record struct ProductVariantId
 
     public bool IsEmpty => Value == Guid.Empty;
 
-    public static ProductVariantId Create()
+#pragma warning disable CA1711 // Los identificadores no deben tener un sufijo incorrecto
+    public static ProductVariantId CreateNew()
+#pragma warning restore CA1711 // Los identificadores no deben tener un sufijo incorrecto
     {
         return new ProductVariantId(Guid.CreateVersion7());
     }
