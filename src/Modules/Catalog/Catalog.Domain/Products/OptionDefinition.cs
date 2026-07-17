@@ -28,14 +28,12 @@ public sealed class OptionDefinition : Entity<ProductOptionId>
 
     public int DisplayOrder { get; }
 
-#pragma warning disable CA1711 // Los identificadores no deben tener un sufijo incorrecto
-    public static Result<OptionDefinition> CreateNew(
-#pragma warning restore CA1711 // Los identificadores no deben tener un sufijo incorrecto
+    public static Result<OptionDefinition> Create(
         OptionName name,
         int displayOrder)
     {
         return Create(
-            ProductOptionId.CreateNew(),
+            ProductOptionId.Generate(),
             name,
             displayOrder);
     }

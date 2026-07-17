@@ -10,7 +10,7 @@ public sealed class OptionDefinitionTests
     {
         var name = OptionName.Create("Color").Value;
 
-        var result = OptionDefinition.CreateNew(
+        var result = OptionDefinition.Create(
             name,
             displayOrder: 0);
 
@@ -23,7 +23,7 @@ public sealed class OptionDefinitionTests
     [Fact]
     public void CreatePreservesIdentifier()
     {
-        var optionId = ProductOptionId.CreateNew();
+        var optionId = ProductOptionId.Generate();
         var name = OptionName.Create("Size").Value;
 
         var result = OptionDefinition.Create(
@@ -40,7 +40,7 @@ public sealed class OptionDefinitionTests
     {
         var name = OptionName.Create("Color").Value;
 
-        var result = OptionDefinition.CreateNew(
+        var result = OptionDefinition.Create(
             name,
             displayOrder: -1);
 
@@ -59,7 +59,7 @@ public sealed class OptionDefinitionTests
         var comparedName =
             OptionName.Create("COLOR").Value;
 
-        var definition = OptionDefinition.CreateNew(
+        var definition = OptionDefinition.Create(
             definitionName,
             displayOrder: 0).Value;
 
@@ -76,7 +76,7 @@ public sealed class OptionDefinitionTests
         var decomposedName =
             OptionName.Create("Cafe\u0301").Value;
 
-        var definition = OptionDefinition.CreateNew(
+        var definition = OptionDefinition.Create(
             composedName,
             displayOrder: 0).Value;
 
@@ -93,7 +93,7 @@ public sealed class OptionDefinitionTests
         var comparedName =
             OptionName.Create("Material").Value;
 
-        var definition = OptionDefinition.CreateNew(
+        var definition = OptionDefinition.Create(
             definitionName,
             displayOrder: 0).Value;
 

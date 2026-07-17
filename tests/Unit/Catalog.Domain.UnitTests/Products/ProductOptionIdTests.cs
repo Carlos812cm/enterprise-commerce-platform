@@ -8,7 +8,7 @@ public sealed class ProductOptionIdTests
     [Fact]
     public void CreateNewReturnsNonEmptyIdentifier()
     {
-        var optionId = ProductOptionId.CreateNew();
+        var optionId = ProductOptionId.Generate();
 
         Assert.False(optionId.IsEmpty);
         Assert.NotEqual(Guid.Empty, optionId.Value);

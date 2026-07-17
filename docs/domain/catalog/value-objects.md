@@ -14,7 +14,8 @@ Both wrap UUID version 7 values.
 
 Implicit conversions to and from `Guid` are intentionally not provided.
 
-New identifiers must be created through `CreateNew()`. Existing identifiers must be reconstructed through `Create(Guid)`.
+New identifiers must be generated through `Generate()`.
+Existing identifiers must be reconstructed through `Create(Guid)`.
 
 ## Text Normalization
 

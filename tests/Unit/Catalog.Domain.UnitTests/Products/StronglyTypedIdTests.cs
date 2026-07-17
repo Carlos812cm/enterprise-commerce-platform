@@ -8,7 +8,7 @@ public sealed class StronglyTypedIdTests
     [Fact]
     public void ProductIdCreateNewReturnsNonEmptyIdentifier()
     {
-        var productId = ProductId.CreateNew();
+        var productId = ProductId.Generate();
 
         Assert.False(productId.IsEmpty);
         Assert.NotEqual(Guid.Empty, productId.Value);
@@ -56,7 +56,7 @@ public sealed class StronglyTypedIdTests
     [Fact]
     public void ProductVariantIdCreateNewReturnsNonEmptyIdentifier()
     {
-        var variantId = ProductVariantId.CreateNew();
+        var variantId = ProductVariantId.Generate();
 
         Assert.False(variantId.IsEmpty);
         Assert.NotEqual(Guid.Empty, variantId.Value);
