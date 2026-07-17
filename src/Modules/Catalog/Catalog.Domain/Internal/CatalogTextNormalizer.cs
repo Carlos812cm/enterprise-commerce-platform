@@ -1,12 +1,13 @@
-using System.Text; // esto es para poder usar StringBuilder, que es una clase que permite construir cadenas de texto de manera eficiente, especialmente cuando se realizan muchas concatenaciones.
+using System.Text;
 
-namespace Catalog.Domain.Internal; // esto indica que la clase CatalogTextNormalizer pertenece al espacio de nombres Catalog.Domain.Internal, lo que ayuda a organizar el código y evitar conflictos de nombres.
+namespace Catalog.Domain.Internal;
 
 internal static class CatalogTextNormalizer
 {
     public static string CollapseWhitespace(string value)
     {
         ArgumentNullException.ThrowIfNull(value);
+
 
         var builder = new StringBuilder(value.Length);
         var separatorPending = false;
@@ -29,5 +30,14 @@ internal static class CatalogTextNormalizer
         }
 
         return builder.ToString();
+    }
+
+    public static string CreateComparisonKey(string value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+
+        return CollapseWhitespace(value)
+            .Normalize(NormalizationForm.FormC)
+            .ToUpperInvariant();
     }
 }

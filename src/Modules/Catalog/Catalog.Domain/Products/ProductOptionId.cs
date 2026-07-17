@@ -2,9 +2,9 @@ using System.Globalization;
 
 namespace Catalog.Domain.Products;
 
-public readonly record struct ProductVariantId
+public readonly record struct ProductOptionId
 {
-    private ProductVariantId(Guid value)
+    private ProductOptionId(Guid value)
     {
         Value = value;
     }
@@ -14,22 +14,22 @@ public readonly record struct ProductVariantId
     public bool IsEmpty => Value == Guid.Empty;
 
 #pragma warning disable CA1711 // Los identificadores no deben tener un sufijo incorrecto
-    public static ProductVariantId CreateNew()
+    public static ProductOptionId CreateNew()
 #pragma warning restore CA1711 // Los identificadores no deben tener un sufijo incorrecto
     {
-        return new ProductVariantId(Guid.CreateVersion7());
+        return new ProductOptionId(Guid.CreateVersion7());
     }
 
-    public static ProductVariantId Create(Guid value)
+    public static ProductOptionId Create(Guid value)
     {
         if (value == Guid.Empty)
         {
             throw new ArgumentException(
-                "A product variant identifier cannot be empty.",
+                "A product option identifier cannot be empty.",
                 nameof(value));
         }
 
-        return new ProductVariantId(value);
+        return new ProductOptionId(value);
     }
 
     public override string ToString()
