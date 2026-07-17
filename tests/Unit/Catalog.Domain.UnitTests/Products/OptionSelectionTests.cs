@@ -8,7 +8,7 @@ public sealed class OptionSelectionTests
     [Fact]
     public void CreatePreservesOptionAndValue()
     {
-        var optionId = ProductOptionId.CreateNew();
+        var optionId = ProductOptionId.Generate();
         var value = OptionValue.Create("Black").Value;
 
         var selection = OptionSelection.Create(
@@ -22,7 +22,7 @@ public sealed class OptionSelectionTests
     [Fact]
     public void SelectionsIgnoreValueCasingForEquality()
     {
-        var optionId = ProductOptionId.CreateNew();
+        var optionId = ProductOptionId.Generate();
 
         var first = OptionSelection.Create(
             optionId,
@@ -41,7 +41,7 @@ public sealed class OptionSelectionTests
     [Fact]
     public void SelectionsNormalizeUnicodeForEquality()
     {
-        var optionId = ProductOptionId.CreateNew();
+        var optionId = ProductOptionId.Generate();
 
         var first = OptionSelection.Create(
             optionId,
@@ -60,11 +60,11 @@ public sealed class OptionSelectionTests
         var value = OptionValue.Create("Black").Value;
 
         var first = OptionSelection.Create(
-            ProductOptionId.CreateNew(),
+            ProductOptionId.Generate(),
             value);
 
         var second = OptionSelection.Create(
-            ProductOptionId.CreateNew(),
+            ProductOptionId.Generate(),
             value);
 
         Assert.NotEqual(first, second);
@@ -85,7 +85,7 @@ public sealed class OptionSelectionTests
     [Fact]
     public void CreateRejectsNullValue()
     {
-        var optionId = ProductOptionId.CreateNew();
+        var optionId = ProductOptionId.Generate();
 
         Assert.Throws<ArgumentNullException>(() =>
             OptionSelection.Create(
