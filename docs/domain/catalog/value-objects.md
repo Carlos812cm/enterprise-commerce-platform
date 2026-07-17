@@ -8,6 +8,7 @@ The current identifiers are:
 
 - `ProductId`
 - `ProductVariantId`
+- `ProductOptionId`
 
 Both wrap UUID version 7 values.
 
