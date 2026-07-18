@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 
-ARG DOTNET_SDK_VERSION=10.0.301
-ARG DOTNET_RUNTIME_VERSION=10.0.9
+ARG DOTNET_SDK_VERSION=10.0.302
+ARG DOTNET_RUNTIME_VERSION=10.0.10
 ARG BUILD_CONFIGURATION=Release
 
 FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_SDK_VERSION} AS build
@@ -12,12 +12,12 @@ WORKDIR /src
 
 COPY . .
 
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages,sharing=locked \
     dotnet restore \
     "src/Hosts/Commerce.Api/Commerce.Api.csproj" \
     --locked-mode
 
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages,sharing=locked \
     dotnet publish \
     "src/Hosts/Commerce.Api/Commerce.Api.csproj" \
     --configuration "${BUILD_CONFIGURATION}" \
