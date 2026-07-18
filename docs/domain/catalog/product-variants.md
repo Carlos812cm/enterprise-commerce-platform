@@ -12,13 +12,13 @@ RUN-X-WHT-42
 
 # Aggregate Boundary
 
-ProductVariant is an entity inside the future Product aggregate.
+`ProductVariant` is an entity inside the `Product` aggregate.
 
 It is not an aggregate root.
 
-Application code must mutate variants through Product, not by calling variant lifecycle methods directly.
+Application code must mutate variants through `Product`. Variant mutation methods remain internal to the Catalog domain assembly.
 
-The mutation methods are internal to the Catalog domain assembly.
+`Product` owns the aggregate domain-event collection.
 
 # State
 
@@ -41,14 +41,16 @@ Draft -> Discontinued
 Active -> Discontinued
 ```
 
-Discontinued is terminal.
+`Discontinued` is terminal.
 
 # Draft Mutability
 
-While a variant is in Draft, Catalog may change:
+While a variant is Draft, `Product` may change:
 
 - SKU
 - Option combination
+
+The aggregate still verifies SKU and combination uniqueness before delegating the mutation to the entity.
 
 # Active Immutability
 
@@ -58,7 +60,29 @@ After activation, Catalog cannot change:
 - Option combination
 - Identity
 
-A correction requires discontinuing the original variant and creating a replacement.
+Correcting an active variant requires:
+
+```
+Discontinue original variant
+Create replacement variant
+Activate replacement variant
+```
+
+# Aggregate Invariants
+
+`Product` enforces:
+
+- SKU uniqueness across all its variants.
+- Unique option combinations among non-discontinued variants.
+- Exact agreement between option definitions and selections.
+- Publication with at least one Draft variant.
+- Activation only while the product is Published.
+- Prevention of discontinuing the last active variant.
+- Cascading discontinuation when the product is discontinued.
+
+A SKU cannot be reused, even after its original variant is discontinued.
+
+A discontinued option combination may be introduced again with a new SKU.
 
 # Idempotency
 
@@ -66,29 +90,32 @@ Activating an already active variant succeeds without replacing the original act
 
 Discontinuing an already discontinued variant succeeds without replacing the original discontinuation timestamp.
 
+Repeated successful lifecycle calls do not raise duplicate domain events.
+
 # Time
 
 Lifecycle timestamps must:
 
-Be supplied explicitly.
-Use UTC offset zero.
-Never be read from a global system clock inside the entity.
+- Be supplied explicitly.
+- Use UTC offset zero.
+- Never be read from a global system clock inside the entity or aggregate.
 
-Application handlers will provide timestamps through TimeProvider.
+Application handlers will provide timestamps through `TimeProvider`.
 
 # Domain Events
 
-The entity does not publish domain events directly.
+`Product` raises internal domain events for successful variant transitions:
 
-The future Product aggregate will publish events after successful variant transitions because the aggregate root owns the transaction boundary and domain-event collection.
+- ProductVariantAddedDomainEvent
+- ProductVariantActivatedDomainEvent
+- ProductVariantDiscontinuedDomainEvent
 
-# Deferred Rules
+These domain events are internal model facts, not public integration contracts.
 
-The future Product aggregate will enforce:
+# Deferred Global Rules
 
-- Global SKU uniqueness through Application and PostgreSQL.
-- SKU uniqueness inside a product.
-- Unique option combinations.
-- Agreement between option definitions and selections.
-- At least one active variant before publication.
-- Prevention of discontinuing the last active variant.
+Global SKU uniqueness across different products will be protected later through:
+
+- An Application-layer pre-check.
+- A PostgreSQL unique constraint.
+- Translation of database conflicts into stable application errors.
