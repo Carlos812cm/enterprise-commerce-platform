@@ -11,13 +11,15 @@
 ## Flow
 
 ```text
-Primitive input
+ICommandDispatcher
+-> Telemetry behavior
+-> Logging behavior
+-> CreateDraftProductCommandHandler
 -> Catalog value objects
 -> Slug uniqueness pre-check
 -> Product.CreateDraft
 -> Product repository
 -> Unit of Work
--> Application response
 ```
 
 # Validation Ownership

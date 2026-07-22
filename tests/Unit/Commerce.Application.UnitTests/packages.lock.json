@@ -22,12 +22,6 @@
           "Microsoft.Extensions.Options": "10.0.10"
         }
       },
-      "Microsoft.Extensions.TimeProvider.Testing": {
-        "type": "Direct",
-        "requested": "[10.8.0, )",
-        "resolved": "10.8.0",
-        "contentHash": "xXcxGfXSO/8o7IfYK36r3eZTl9RMKAl5K6x3x6o/QQBolI0t8vsLIGmhc3HJBTd11u1uPLHz61VnOTSTmY7ZVA=="
-      },
       "Microsoft.NET.Test.Sdk": {
         "type": "Direct",
         "requested": "[18.7.0, )",
@@ -201,26 +195,6 @@
         "dependencies": {
           "xunit.v3.extensibility.core": "[3.2.2]",
           "xunit.v3.runner.common": "[3.2.2]"
-        }
-      },
-      "catalog.application": {
-        "type": "Project",
-        "dependencies": {
-          "Catalog.Contracts": "[1.0.0, )",
-          "Catalog.Domain": "[1.0.0, )",
-          "Commerce.Application": "[1.0.0, )"
-        }
-      },
-      "catalog.contracts": {
-        "type": "Project",
-        "dependencies": {
-          "Commerce.Contracts": "[1.0.0, )"
-        }
-      },
-      "catalog.domain": {
-        "type": "Project",
-        "dependencies": {
-          "Commerce.Domain": "[1.0.0, )"
         }
       },
       "commerce.application": {

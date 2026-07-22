@@ -17,6 +17,9 @@ namespace Commerce.ServiceDefaults;
 
 public static class ServiceDefaultsExtensions
 {
+    private const string ApplicationInstrumentationName =
+        "Commerce.Application";
+
     public static IHostApplicationBuilder AddServiceDefaults(
         this IHostApplicationBuilder builder,
         string serviceName)
@@ -82,8 +85,10 @@ public static class ServiceDefaultsExtensions
             .WithMetrics(metrics => metrics
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation()
-                .AddRuntimeInstrumentation())
+                .AddRuntimeInstrumentation()
+                .AddMeter(ApplicationInstrumentationName))
             .WithTracing(tracing => tracing
+                .AddSource(ApplicationInstrumentationName)
                 .AddAspNetCoreInstrumentation(options =>
                 {
                     options.Filter = context =>

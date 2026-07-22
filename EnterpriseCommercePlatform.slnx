@@ -76,6 +76,7 @@
   <Folder Name="/tests/Unit/">
     <Project Path="tests/Unit/Catalog.Application.UnitTests/Catalog.Application.UnitTests.csproj" />
     <Project Path="tests/Unit/Catalog.Domain.UnitTests/Catalog.Domain.UnitTests.csproj" />
+    <Project Path="tests/Unit/Commerce.Application.UnitTests/Commerce.Application.UnitTests.csproj" />
     <Project Path="tests/Unit/Commerce.Domain.UnitTests/Commerce.Domain.UnitTests.csproj" />
   </Folder>
 </Solution>
