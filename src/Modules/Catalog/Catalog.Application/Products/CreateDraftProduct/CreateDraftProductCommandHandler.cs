@@ -1,7 +1,6 @@
 using Catalog.Application.Abstractions.Persistence;
 using Catalog.Domain.Products;
 using Commerce.Application.Messaging;
-using Commerce.Application.Persistence;
 using Commerce.Domain;
 
 namespace Catalog.Application.Products.CreateDraftProduct;
@@ -13,13 +12,13 @@ public sealed class CreateDraftProductCommandHandler :
 {
     private readonly IProductRepository _productRepository;
     private readonly IProductSlugUniquenessChecker _slugUniquenessChecker;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ICatalogUnitOfWork _unitOfWork;
     private readonly TimeProvider _timeProvider;
 
     public CreateDraftProductCommandHandler(
         IProductRepository productRepository,
         IProductSlugUniquenessChecker slugUniquenessChecker,
-        IUnitOfWork unitOfWork,
+        ICatalogUnitOfWork unitOfWork,
         TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(productRepository);

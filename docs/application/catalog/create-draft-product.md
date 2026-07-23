@@ -66,3 +66,16 @@ Unexpected technical failures propagate as exceptions and are handled by the hos
 The slug uniqueness pre-check improves the client error but does not close concurrent races.
 
 A future PostgreSQL unique constraint remains the authoritative guard.
+
+## Persistence
+
+The command is persisted through:
+
+- `IProductRepository`
+- `ICatalogUnitOfWork`
+- `CatalogDbContext`
+- PostgreSQL
+
+The slug availability check is advisory.
+
+The `ux_products_slug` database constraint closes concurrent creation races.

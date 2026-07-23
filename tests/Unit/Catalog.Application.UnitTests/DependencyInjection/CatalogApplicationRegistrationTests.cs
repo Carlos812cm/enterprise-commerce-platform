@@ -47,7 +47,7 @@ public sealed class CatalogApplicationRegistrationTests
             IProductSlugUniquenessChecker>(
             slugChecker);
 
-        services.AddSingleton<IUnitOfWork>(
+        services.AddSingleton<ICatalogUnitOfWork>(
             unitOfWork);
 
         services.AddSingleton<TimeProvider>(
@@ -128,7 +128,7 @@ public sealed class CatalogApplicationRegistrationTests
     }
 
     private sealed class RecordingUnitOfWork :
-        IUnitOfWork
+        ICatalogUnitOfWork
     {
         public int SaveCallCount { get; private set; }
 
