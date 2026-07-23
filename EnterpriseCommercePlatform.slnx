@@ -73,6 +73,9 @@
   <Folder Name="/tests/Architecture/">
     <Project Path="tests/Architecture/Commerce.ArchitectureTests/Commerce.ArchitectureTests.csproj" />
   </Folder>
+  <Folder Name="/tests/Integration/">
+    <Project Path="tests/Integration/Catalog.Infrastructure.IntegrationTests/Catalog.Infrastructure.IntegrationTests.csproj" />
+  </Folder>
   <Folder Name="/tests/Unit/">
     <Project Path="tests/Unit/Catalog.Application.UnitTests/Catalog.Application.UnitTests.csproj" />
     <Project Path="tests/Unit/Catalog.Domain.UnitTests/Catalog.Domain.UnitTests.csproj" />

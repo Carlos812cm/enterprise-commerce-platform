@@ -380,7 +380,7 @@ public sealed class CreateDraftProductCommandHandlerTests
     }
 
     private sealed class RecordingUnitOfWork :
-        IUnitOfWork
+        ICatalogUnitOfWork
     {
         public int SaveCallCount { get; private set; }
 
