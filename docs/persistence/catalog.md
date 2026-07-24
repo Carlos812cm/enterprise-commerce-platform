@@ -6,6 +6,9 @@ Catalog uses EF Core with the Npgsql PostgreSQL provider.
 
 ```text
 catalog.products
+catalog.product_options
+catalog.product_variants
+catalog.product_variant_options
 ```
 
 The first migration stores:
@@ -76,3 +79,23 @@ They verify:
 - Aggregate rehydration
 - Slug uniqueness queries
 - Database unique constraints
+
+Product domain aggregate
+↕ ProductPersistenceMapper
+Internal EF persistence records
+↕ CatalogDbContext
+PostgreSQL
+
+## Optimistic Concurrency
+
+The `products.version` column is the aggregate concurrency token.
+
+Every aggregate update increments this value, including changes to option or variant rows.
+
+A stale writer causes EF Core to throw `DbUpdateConcurrencyException`.
+
+## Loading
+
+ProductRepository loads the complete write aggregate using a split query.
+
+Read-only storefront queries will use separate read models rather than loading the write aggregate.

@@ -77,6 +77,61 @@ public sealed class Product : AggregateRoot<ProductId>
         return product;
     }
 
+    internal static Product Rehydrate(
+        ProductId id,
+        ProductName name,
+        ProductSlug slug,
+        ProductDescription description,
+        ProductStatus status,
+        DateTimeOffset? publishedAtUtc,
+        DateTimeOffset? discontinuedAtUtc,
+        IEnumerable<OptionDefinition> optionDefinitions,
+        IEnumerable<ProductVariant> variants)
+    {
+        if (id.IsEmpty)
+        {
+            throw new ArgumentException(
+                "A product identifier cannot be empty.",
+                nameof(id));
+        }
+
+        ArgumentNullException.ThrowIfNull(name);
+        ArgumentNullException.ThrowIfNull(slug);
+        ArgumentNullException.ThrowIfNull(description);
+        ArgumentNullException.ThrowIfNull(optionDefinitions);
+        ArgumentNullException.ThrowIfNull(variants);
+
+        EnsureNullableUtcTimestamp(
+            publishedAtUtc,
+            nameof(publishedAtUtc));
+
+        EnsureNullableUtcTimestamp(
+            discontinuedAtUtc,
+            nameof(discontinuedAtUtc));
+
+        var product = new Product(
+            id,
+            name,
+            slug,
+            description)
+        {
+            Status = status,
+            PublishedAtUtc = publishedAtUtc,
+            DiscontinuedAtUtc = discontinuedAtUtc
+        };
+
+        product._optionDefinitions.AddRange(
+            optionDefinitions.OrderBy(
+                static option =>
+                    option.DisplayOrder));
+
+        product._variants.AddRange(variants);
+
+        product.EnsureRehydratedState();
+
+        return product;
+    }
+
     public Result ChangeName(ProductName name)
     {
         ArgumentNullException.ThrowIfNull(name);
@@ -328,6 +383,170 @@ public sealed class Product : AggregateRoot<ProductId>
 
         return variant.ChangeOptionCombination(
             optionCombination);
+    }
+
+    private void EnsureRehydratedState()
+    {
+        EnsureRehydratedLifecycle();
+        EnsureRehydratedOptions();
+        EnsureRehydratedVariants();
+    }
+
+    private void EnsureRehydratedLifecycle()
+    {
+        var lifecycleIsValid = Status switch
+        {
+            ProductStatus.Draft =>
+                PublishedAtUtc is null &&
+                DiscontinuedAtUtc is null &&
+                _variants.All(
+                    static variant =>
+                        variant.Status !=
+                        ProductVariantStatus.Active),
+
+            ProductStatus.Published =>
+                PublishedAtUtc is not null &&
+                DiscontinuedAtUtc is null &&
+                _variants.Any(
+                    static variant =>
+                        variant.Status ==
+                        ProductVariantStatus.Active),
+
+            ProductStatus.Discontinued =>
+                DiscontinuedAtUtc is not null &&
+                _variants.All(
+                    static variant =>
+                        variant.Status ==
+                        ProductVariantStatus.Discontinued),
+
+            _ => false
+        };
+
+        if (!lifecycleIsValid)
+        {
+            throw new InvalidOperationException(
+                "The persisted product lifecycle is invalid.");
+        }
+
+        if (PublishedAtUtc is { } publishedAtUtc &&
+            DiscontinuedAtUtc is { } discontinuedAtUtc &&
+            discontinuedAtUtc < publishedAtUtc)
+        {
+            throw new InvalidOperationException(
+                "The persisted product timestamps are out of order.");
+        }
+    }
+
+    private void EnsureRehydratedOptions()
+    {
+        var optionIds = new HashSet<ProductOptionId>();
+        var displayOrders = new HashSet<int>();
+
+        for (var index = 0;
+            index < _optionDefinitions.Count;
+            index++)
+        {
+            var option = _optionDefinitions[index];
+
+            if (!optionIds.Add(option.Id))
+            {
+                throw new InvalidOperationException(
+                    "The persisted product contains duplicate option identifiers.");
+            }
+
+            if (!displayOrders.Add(option.DisplayOrder))
+            {
+                throw new InvalidOperationException(
+                    "The persisted product contains duplicate option display orders.");
+            }
+
+            for (var comparedIndex = index + 1;
+                comparedIndex < _optionDefinitions.Count;
+                comparedIndex++)
+            {
+                if (option.HasSameNameAs(
+                        _optionDefinitions[comparedIndex].Name))
+                {
+                    throw new InvalidOperationException(
+                        "The persisted product contains duplicate option names.");
+                }
+            }
+        }
+    }
+
+    private void EnsureRehydratedVariants()
+    {
+        var variantIds =
+            new HashSet<ProductVariantId>();
+
+        var skus =
+            new HashSet<Sku>();
+
+        var liveCombinationKeys =
+            new HashSet<string>(
+                StringComparer.Ordinal);
+
+        foreach (var variant in _variants)
+        {
+            if (!variantIds.Add(variant.Id))
+            {
+                throw new InvalidOperationException(
+                    "The persisted product contains duplicate variant identifiers.");
+            }
+
+            if (!skus.Add(variant.Sku))
+            {
+                throw new InvalidOperationException(
+                    "The persisted product contains duplicate SKUs.");
+            }
+
+            var combinationError =
+                GetOptionCombinationError(
+                    variant.OptionCombination);
+
+            if (combinationError is not null)
+            {
+                throw new InvalidOperationException(
+                    $"The persisted variant option combination is invalid: {combinationError.Code}.");
+            }
+
+            if (variant.Status !=
+                    ProductVariantStatus.Discontinued &&
+                !liveCombinationKeys.Add(
+                    variant.OptionCombination.CanonicalKey))
+            {
+                throw new InvalidOperationException(
+                    "The persisted product contains duplicate live option combinations.");
+            }
+
+            if (PublishedAtUtc is { } publishedAtUtc &&
+                variant.ActivatedAtUtc is { } activatedAtUtc &&
+                activatedAtUtc < publishedAtUtc)
+            {
+                throw new InvalidOperationException(
+                    "A persisted variant was activated before its product was published.");
+            }
+
+            if (DiscontinuedAtUtc is { } discontinuedAtUtc &&
+                variant.DiscontinuedAtUtc is { } variantDiscontinuedAtUtc &&
+                variantDiscontinuedAtUtc > discontinuedAtUtc)
+            {
+                throw new InvalidOperationException(
+                    "A persisted variant was discontinued after its product.");
+            }
+        }
+    }
+
+    private static void EnsureNullableUtcTimestamp(
+        DateTimeOffset? timestamp,
+        string parameterName)
+    {
+        if (timestamp is { } value &&
+            value.Offset != TimeSpan.Zero)
+        {
+            throw new InvalidOperationException(
+                $"The persisted timestamp '{parameterName}' must use the UTC offset.");
+        }
     }
 
     public Result Publish(

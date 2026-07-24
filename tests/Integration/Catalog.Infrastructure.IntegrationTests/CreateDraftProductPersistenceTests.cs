@@ -67,18 +67,16 @@ public sealed class CreateDraftProductPersistenceTests :
         await using var verificationScope =
             serviceProvider.CreateAsyncScope();
 
-        var dbContext =
+        var repository =
             verificationScope.ServiceProvider
-                .GetRequiredService<CatalogDbContext>();
+                .GetRequiredService<IProductRepository>();
 
         var persistedProduct =
-            await dbContext.Products
-                .AsNoTracking()
-                .SingleAsync(
-                    product =>
-                        product.Id ==
-                        response.ProductId,
-                    TestContext.Current.CancellationToken);
+            await repository.GetByIdAsync(
+                response.ProductId,
+                TestContext.Current.CancellationToken);
+
+        Assert.NotNull(persistedProduct);
 
         Assert.Equal(
             ProductStatus.Draft,
@@ -126,9 +124,13 @@ public sealed class CreateDraftProductPersistenceTests :
         await using (var writeScope =
             serviceProvider.CreateAsyncScope())
         {
-            var dbContext =
+            var repository =
                 writeScope.ServiceProvider
-                    .GetRequiredService<CatalogDbContext>();
+                    .GetRequiredService<IProductRepository>();
+
+            var unitOfWork =
+                writeScope.ServiceProvider
+                    .GetRequiredService<ICatalogUnitOfWork>();
 
             var product = Product.CreateDraft(
                 ProductName.Create(
@@ -137,9 +139,9 @@ public sealed class CreateDraftProductPersistenceTests :
                 ProductDescription.Empty,
                 FixedUtcNow);
 
-            dbContext.Products.Add(product);
+            repository.Add(product);
 
-            await dbContext.SaveChangesAsync(
+            await unitOfWork.SaveChangesAsync(
                 TestContext.Current.CancellationToken);
         }
 
@@ -179,13 +181,18 @@ public sealed class CreateDraftProductPersistenceTests :
         await using (var firstScope =
             serviceProvider.CreateAsyncScope())
         {
-            var dbContext =
+            var productRepository =
                 firstScope.ServiceProvider
-                    .GetRequiredService<CatalogDbContext>();
+                    .GetRequiredService<IProductRepository>();
 
-            dbContext.Products.Add(firstProduct);
+            var unitOfWork =
+                firstScope.ServiceProvider
+                    .GetRequiredService<
+                        ICatalogUnitOfWork>();
 
-            await dbContext.SaveChangesAsync(
+            productRepository.Add(firstProduct);
+
+            await unitOfWork.SaveChangesAsync(
                 TestContext.Current.CancellationToken);
         }
 
@@ -199,17 +206,20 @@ public sealed class CreateDraftProductPersistenceTests :
         await using var secondScope =
             serviceProvider.CreateAsyncScope();
 
-        var secondDbContext =
+        var secondProductRepository =
             secondScope.ServiceProvider
-                .GetRequiredService<CatalogDbContext>();
+                .GetRequiredService<IProductRepository>();
 
-        secondDbContext.Products.Add(
-            secondProduct);
+        var secondUnitOfWork =
+            secondScope.ServiceProvider
+                .GetRequiredService<ICatalogUnitOfWork>();
+
+        secondProductRepository.Add(secondProduct);
 
         var exception =
             await Assert.ThrowsAsync<
                 DbUpdateException>(
-                () => secondDbContext
+                () => secondUnitOfWork
                     .SaveChangesAsync(
                         TestContext.Current
                             .CancellationToken));

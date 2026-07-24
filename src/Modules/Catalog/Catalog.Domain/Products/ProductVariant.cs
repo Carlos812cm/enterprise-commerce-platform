@@ -61,6 +61,69 @@ public sealed class ProductVariant :
             optionCombination);
     }
 
+    internal static ProductVariant Rehydrate(
+        ProductVariantId id,
+        Sku sku,
+        VariantOptionCombination optionCombination,
+        ProductVariantStatus status,
+        DateTimeOffset? activatedAtUtc,
+        DateTimeOffset? discontinuedAtUtc)
+    {
+        if (id.IsEmpty)
+        {
+            throw new ArgumentException(
+                "A product variant identifier cannot be empty.",
+                nameof(id));
+        }
+
+        ArgumentNullException.ThrowIfNull(sku);
+        ArgumentNullException.ThrowIfNull(optionCombination);
+
+        EnsureNullableUtcTimestamp(
+            activatedAtUtc,
+            nameof(activatedAtUtc));
+
+        EnsureNullableUtcTimestamp(
+            discontinuedAtUtc,
+            nameof(discontinuedAtUtc));
+
+        var lifecycleIsValid = status switch
+        {
+            ProductVariantStatus.Draft =>
+                activatedAtUtc is null &&
+                discontinuedAtUtc is null,
+
+            ProductVariantStatus.Active =>
+                activatedAtUtc is not null &&
+                discontinuedAtUtc is null,
+
+            ProductVariantStatus.Discontinued =>
+                discontinuedAtUtc is not null &&
+                (
+                    activatedAtUtc is null ||
+                    discontinuedAtUtc >= activatedAtUtc
+                ),
+
+            _ => false
+        };
+
+        if (!lifecycleIsValid)
+        {
+            throw new InvalidOperationException(
+                "The persisted product variant lifecycle is invalid.");
+        }
+
+        return new ProductVariant(
+            id,
+            sku,
+            optionCombination)
+        {
+            Status = status,
+            ActivatedAtUtc = activatedAtUtc,
+            DiscontinuedAtUtc = discontinuedAtUtc
+        };
+    }
+
     internal Result ChangeSku(Sku sku)
     {
         ArgumentNullException.ThrowIfNull(sku);
@@ -102,6 +165,18 @@ public sealed class ProductVariant :
         OptionCombination = optionCombination;
 
         return Result.Success();
+    }
+
+    private static void EnsureNullableUtcTimestamp(
+        DateTimeOffset? timestamp,
+        string parameterName)
+    {
+        if (timestamp is { } value &&
+            value.Offset != TimeSpan.Zero)
+        {
+            throw new InvalidOperationException(
+                $"The persisted timestamp '{parameterName}' must use the UTC offset.");
+        }
     }
 
     internal Result Activate(
