@@ -14,11 +14,13 @@ internal sealed class ProductSlugUniquenessChecker(
     {
         ArgumentNullException.ThrowIfNull(slug);
 
-        return !await dbContext.Products
-            .AsNoTracking()
-            .AnyAsync(
-                product => product.Slug == slug,
-                cancellationToken)
-            .ConfigureAwait(false);
+        return !await dbContext.ProductRecords
+        .AsNoTracking()
+        .AnyAsync(
+            product =>
+                product.Slug ==
+                slug.Value,
+            cancellationToken)
+        .ConfigureAwait(false);
     }
 }

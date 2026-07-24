@@ -346,6 +346,20 @@ public sealed class CreateDraftProductCommandHandlerTests
             AddedProduct = product;
             AddCallCount++;
         }
+
+        public Task<Product?> GetByIdAsync(
+        ProductId productId,
+        CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            return Task.FromResult<Product?>(null);
+        }
+
+        public void Update(Product product)
+        {
+            ArgumentNullException.ThrowIfNull(product);
+        }
     }
 
     private sealed class StubProductSlugUniquenessChecker :

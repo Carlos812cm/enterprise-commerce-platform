@@ -1,6 +1,6 @@
 using Catalog.Application.Abstractions.Persistence;
-using Catalog.Domain.Products;
 using Microsoft.EntityFrameworkCore;
+using Catalog.Infrastructure.Persistence.Records;
 
 namespace Catalog.Infrastructure.Persistence;
 
@@ -11,8 +11,8 @@ public sealed class CatalogDbContext(
 {
     public const string Schema = "catalog";
 
-    public DbSet<Product> Products =>
-        Set<Product>();
+    internal DbSet<ProductRecord> ProductRecords =>
+        Set<ProductRecord>();
 
     protected override void OnModelCreating(
         ModelBuilder modelBuilder)
