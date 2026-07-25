@@ -65,6 +65,7 @@ jobs:
           --project src/Modules/Catalog/Catalog.Infrastructure/Catalog.Infrastructure.csproj
           --startup-project src/Modules/Catalog/Catalog.Infrastructure/Catalog.Infrastructure.csproj
           --context CatalogDbContext
+          --configuration Release
           --no-build
 
       - name: Run tests
