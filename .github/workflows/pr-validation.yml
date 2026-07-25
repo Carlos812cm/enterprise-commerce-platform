@@ -37,6 +37,9 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: Restore local .NET tools
+        run: dotnet tool restore
+
       - name: Display .NET info
         run: dotnet --info
 
@@ -55,6 +58,14 @@ jobs:
           dotnet build "$SOLUTION_FILE"
           --configuration Release
           --no-restore
+
+      - name: Verify Catalog migration model
+        run: >
+          dotnet ef migrations has-pending-model-changes
+          --project src/Modules/Catalog/Catalog.Infrastructure/Catalog.Infrastructure.csproj
+          --startup-project src/Modules/Catalog/Catalog.Infrastructure/Catalog.Infrastructure.csproj
+          --context CatalogDbContext
+          --no-build
 
       - name: Run tests
         run: >

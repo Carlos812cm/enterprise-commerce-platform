@@ -260,6 +260,10 @@ docker run \
   --env "ConnectionStrings__Postgres=Host=$postgres_container;Port=5432;Database=commerce;Username=commerce;Password=commerce_dev_password;Pooling=true" \
   --env "ConnectionStrings__Redis=$redis_container:6379,abortConnect=false" \
   --env "ConnectionStrings__RabbitMq=amqp://commerce:commerce_dev_password@$rabbitmq_container:5672/" \
+  --env "Authentication__MetadataAddress=http://identity.invalid/.well-known/openid-configuration" \
+  --env "Authentication__ValidIssuer=http://identity.invalid" \
+  --env "Authentication__Audience=commerce-api" \
+  --env "Authentication__RequireHttpsMetadata=false" \
   "$api_image"
 
 docker run \

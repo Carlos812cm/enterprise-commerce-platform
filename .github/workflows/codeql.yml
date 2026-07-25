@@ -30,6 +30,8 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: Restore local .NET tools
+        run: dotnet tool restore
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
