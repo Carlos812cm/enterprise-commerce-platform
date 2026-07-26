@@ -112,7 +112,7 @@ public sealed class ProjectDependencyRulesTests
     }
 
     [Fact]
-    public void ModuleApiProjectsMustOnlyReferenceApplicationAndContracts()
+    public void ModuleApiProjectsMustOnlyReferenceModuleCompositionDependencies()
     {
         var violations = SourceProjects
             .Where(project =>
@@ -123,7 +123,7 @@ public sealed class ProjectDependencyRulesTests
                 .Select(reference => FormatViolation(
                     project,
                     reference,
-                    "Module Api projects may only reference their own Application and Contracts projects.")))
+                    "Module Api projects may only reference their own Application, Infrastructure and Contracts projects.")))
             .ToArray();
 
         AssertNoViolations(violations);
@@ -239,8 +239,12 @@ public sealed class ProjectDependencyRulesTests
         }
 
         return
-            reference.Name == $"{project.ModuleName}.Application" ||
-            reference.Name == $"{project.ModuleName}.Contracts";
+            reference.Name ==
+            $"{project.ModuleName}.Application" ||
+            reference.Name ==
+            $"{project.ModuleName}.Infrastructure" ||
+            reference.Name ==
+            $"{project.ModuleName}.Contracts";
     }
 
     private static bool IsAllowedApiHostReference(ProjectReferenceDescriptor reference)
