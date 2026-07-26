@@ -6,11 +6,6 @@ services:
       OTEL_METRIC_EXPORT_INTERVAL: 5000
       OTEL_RESOURCE_ATTRIBUTES: deployment.environment.name=development
 
-      Authentication__MetadataAddress: "http://keycloak:8080/realms/commerce/.well-known/openid-configuration"
-      Authentication__ValidIssuer: "http://localhost:${KEYCLOAK_PORT:-8080}/realms/commerce"
-      Authentication__Audience: "commerce-api"
-      Authentication__RequireHttpsMetadata: "false"
-
   commerce-worker:
     environment:
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
@@ -83,20 +78,3 @@ volumes:
   prometheus_data:
   tempo_data:
   grafana_data:
-
-  keycloak:
-  image: quay.io/keycloak/keycloak:26.6.4
-  container_name: commerce-keycloak
-  command:
-    - start-dev
-    - --import-realm
-  environment:
-    KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME:-admin}
-    KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD:-admin}
-    KC_HOSTNAME: "http://localhost:${KEYCLOAK_PORT:-8080}"
-    KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
-    KEYCLOAK_COMMERCE_CLI_SECRET: ${KEYCLOAK_COMMERCE_CLI_SECRET:-commerce_cli_dev_secret}
-  volumes:
-    - ./deploy/identity/keycloak/commerce-realm.json:/opt/keycloak/data/import/commerce-realm.json:ro
-  ports:
-    - "${KEYCLOAK_PORT:-8080}:8080"
