@@ -1,6 +1,8 @@
 using Catalog.Application;
 using Catalog.Application.Abstractions.Persistence;
+using Catalog.Application.Abstractions.Queries;
 using Catalog.Application.Products.CreateDraftProduct;
+using Catalog.Application.Products.GetProductById;
 using Catalog.Domain.Products;
 using Commerce.Application.Messaging;
 using Commerce.Application.Persistence;
@@ -49,6 +51,9 @@ public sealed class CatalogApplicationRegistrationTests
 
         services.AddSingleton<ICatalogUnitOfWork>(
             unitOfWork);
+
+        services.AddSingleton<IProductDetailsReader>(
+            new EmptyProductDetailsReader());
 
         services.AddSingleton<TimeProvider>(
             timeProvider);
@@ -138,6 +143,21 @@ public sealed class CatalogApplicationRegistrationTests
             cancellationToken.ThrowIfCancellationRequested();
 
             return Task.FromResult(true);
+        }
+    }
+
+    private sealed class EmptyProductDetailsReader :
+        IProductDetailsReader
+    {
+        public Task<AdminProductDetailsReadModel?>
+            GetByIdAsync(
+                Guid productId,
+                CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            return Task.FromResult<
+                AdminProductDetailsReadModel?>(null);
         }
     }
 

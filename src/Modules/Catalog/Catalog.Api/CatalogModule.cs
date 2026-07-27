@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Catalog.Api.Endpoints.Products.GetProductById;
 
 namespace Catalog.Api;
 
@@ -49,6 +50,7 @@ public static class CatalogModule
                 .WithTags("Catalog");
 
         catalogGroup.MapCreateDraftProduct();
+        catalogGroup.MapGetProductById();
 
         return endpoints;
     }

@@ -1,5 +1,7 @@
 using Catalog.Application.Abstractions.Persistence;
+using Catalog.Application.Abstractions.Queries;
 using Catalog.Infrastructure.Persistence;
+using Catalog.Infrastructure.Queries;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Npgsql;
@@ -45,6 +47,10 @@ public static class CatalogInfrastructureServiceCollectionExtensions
             static serviceProvider =>
                 serviceProvider
                     .GetRequiredService<CatalogDbContext>());
+
+        services.TryAddScoped<
+            IProductDetailsReader,
+            DapperProductDetailsReader>();
 
         return services;
     }
