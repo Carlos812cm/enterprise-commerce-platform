@@ -26,4 +26,17 @@ internal static class ApplicationDiagnostics
             unit: "s",
             description:
             "Application command execution duration in seconds.");
+
+    public static Counter<long> QueryExecutions { get; } =
+    Meter.CreateCounter<long>(
+        "commerce.application.query.executions",
+        description:
+        "Number of Application queries grouped by query and outcome.");
+
+    public static Histogram<double> QueryDuration { get; } =
+        Meter.CreateHistogram<double>(
+            "commerce.application.query.duration",
+            unit: "s",
+            description:
+            "Application query execution duration in seconds.");
 }

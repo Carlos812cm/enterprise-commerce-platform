@@ -1,4 +1,5 @@
 using Catalog.Application.Products.CreateDraftProduct;
+using Catalog.Application.Products.GetProductById;
 using Commerce.Application.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,6 +16,11 @@ public static class CatalogApplicationServiceCollectionExtensions
             CreateDraftProductCommand,
             CreateDraftProductResponse,
             CreateDraftProductCommandHandler>();
+
+        services.AddQueryHandler<
+            GetProductByIdQuery,
+            AdminProductDetailsReadModel,
+            GetProductByIdQueryHandler>();
 
         return services;
     }
