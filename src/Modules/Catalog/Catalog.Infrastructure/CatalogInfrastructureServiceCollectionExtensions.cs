@@ -5,6 +5,8 @@ using Catalog.Infrastructure.Queries;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Npgsql;
+using Catalog.Application.Abstractions.Caching;
+using Catalog.Infrastructure.Caching;
 
 namespace Catalog.Infrastructure;
 
@@ -51,6 +53,18 @@ public static class CatalogInfrastructureServiceCollectionExtensions
         services.TryAddScoped<
             IProductDetailsReader,
             DapperProductDetailsReader>();
+
+        services.TryAddScoped<
+            IStorefrontProductSource,
+            DapperStorefrontProductSource>();
+
+        services.TryAddScoped<
+            IStorefrontProductReader,
+            HybridStorefrontProductReader>();
+
+        services.TryAddSingleton<
+            IStorefrontProductCacheInvalidator,
+            HybridStorefrontProductCacheInvalidator>();
 
         return services;
     }

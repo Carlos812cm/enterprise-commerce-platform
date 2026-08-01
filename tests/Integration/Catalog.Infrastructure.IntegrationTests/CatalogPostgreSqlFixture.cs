@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 using Testcontainers.PostgreSql;
 using Xunit;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace Catalog.Infrastructure.IntegrationTests;
 
@@ -73,6 +74,13 @@ public sealed class CatalogPostgreSqlFixture :
         services.AddSingleton(
             new CatalogTestConnection(
                 connectionString));
+
+        services.AddHybridCache(options =>
+        {
+            options.MaximumKeyLength = 512;
+            options.MaximumPayloadBytes =
+                2 * 1024 * 1024;
+        });
 
         services.AddCatalogApplication();
         services.AddCatalogInfrastructure();
