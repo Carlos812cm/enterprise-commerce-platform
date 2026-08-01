@@ -2,6 +2,7 @@ using Catalog.Application.Products.CreateDraftProduct;
 using Catalog.Application.Products.GetProductById;
 using Commerce.Application.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
+using Catalog.Application.Products.GetPublishedProductBySlug;
 
 namespace Catalog.Application;
 
@@ -21,6 +22,11 @@ public static class CatalogApplicationServiceCollectionExtensions
             GetProductByIdQuery,
             AdminProductDetailsReadModel,
             GetProductByIdQueryHandler>();
+
+        services.AddQueryHandler<
+            GetPublishedProductBySlugQuery,
+            PublishedProductDetailsReadModel,
+            GetPublishedProductBySlugQueryHandler>();
 
         return services;
     }

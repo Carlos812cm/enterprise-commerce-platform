@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Commerce.ServiceDefaults;
 
@@ -19,15 +20,29 @@ public static class InfrastructureClientExtensions
 
         builder.AddNpgsqlDataSource(PostgresConnectionName);
 
-        builder.AddRedisClient(
-            RedisConnectionName,
-            configureOptions: options =>
+        builder
+            .AddRedisClientBuilder(
+                RedisConnectionName,
+                configureOptions: options =>
+                {
+                    options.AbortOnConnectFail = false;
+                    options.ConnectRetry = 3;
+                    options.ConnectTimeout = 5_000;
+                    options.ClientName = clientName;
+                })
+            .WithDistributedCache(options =>
             {
-                options.AbortOnConnectFail = false;
-                options.ConnectRetry = 3;
-                options.ConnectTimeout = 5_000;
-                options.ClientName = clientName;
+                options.InstanceName = "commerce:";
             });
+
+        builder.Services.AddHybridCache(options =>
+        {
+            options.MaximumKeyLength = 512;
+            options.MaximumPayloadBytes =
+                2 * 1024 * 1024;
+
+            options.ReportTagMetrics = false;
+        });
 
         builder.AddRabbitMQClient(
             RabbitMqConnectionName,

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Catalog.Api.Endpoints.Products.GetProductById;
+using Catalog.Api.Endpoints.Storefront.GetPublishedProductBySlug;
 
 namespace Catalog.Api;
 
@@ -51,6 +52,14 @@ public static class CatalogModule
 
         catalogGroup.MapCreateDraftProduct();
         catalogGroup.MapGetProductById();
+
+        var storefrontGroup =
+                endpoints
+                    .MapGroup("/api/storefront")
+                    .WithTags("Storefront Catalog");
+
+        storefrontGroup
+            .MapGetPublishedProductBySlug();
 
         return endpoints;
     }

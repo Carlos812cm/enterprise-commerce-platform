@@ -12,6 +12,7 @@ using Testcontainers.PostgreSql;
 using Xunit;
 using CatalogAuthorization =
     global::Catalog.Api.Authorization.CatalogAuthorization;
+using Testcontainers.Redis;
 
 namespace Commerce.Api.IntegrationTests;
 
@@ -24,6 +25,11 @@ public sealed class CommerceApiFixture :
             .WithUsername("commerce")
             .WithPassword(
                 "commerce_http_test_password")
+            .Build();
+
+    private readonly RedisContainer _redis =
+        new RedisBuilder(
+            "redis:8.4.4")
             .Build();
 
     private NpgsqlDataSource? _dataSource;
@@ -42,9 +48,14 @@ public sealed class CommerceApiFixture :
             NpgsqlDataSource.Create(
                 _postgres.GetConnectionString());
 
+        await _redis.StartAsync(
+            TestContext.Current
+                .CancellationToken);
+
         _factory =
             new TestCommerceApiFactory(
-                _dataSource);
+                _dataSource,
+                _redis.GetConnectionString());
 
         await using var scope =
             Services.CreateAsyncScope();
@@ -104,6 +115,7 @@ public sealed class CommerceApiFixture :
         }
 
         await _postgres.DisposeAsync();
+        await _redis.DisposeAsync();
     }
 
     private TestCommerceApiFactory GetFactory()
@@ -114,8 +126,9 @@ public sealed class CommerceApiFixture :
     }
 
     private sealed class TestCommerceApiFactory(
-        NpgsqlDataSource dataSource)
-        : WebApplicationFactory<Program>
+        NpgsqlDataSource dataSource,
+            string redisConnectionString)
+            : WebApplicationFactory<Program>
     {
         protected override void ConfigureWebHost(
             IWebHostBuilder builder)
@@ -128,7 +141,7 @@ public sealed class CommerceApiFixture :
 
             builder.UseSetting(
                 "ConnectionStrings:Redis",
-                "localhost:1,abortConnect=false");
+                redisConnectionString);
 
             builder.UseSetting(
                 "ConnectionStrings:RabbitMq",

@@ -19,6 +19,8 @@ public static class ServiceDefaultsExtensions
 {
     private const string ApplicationInstrumentationName =
         "Commerce.Application";
+    private const string CatalogCacheInstrumentationName =
+    "Commerce.Catalog.Cache";
 
     public static IHostApplicationBuilder AddServiceDefaults(
         this IHostApplicationBuilder builder,
@@ -86,7 +88,8 @@ public static class ServiceDefaultsExtensions
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation()
                 .AddRuntimeInstrumentation()
-                .AddMeter(ApplicationInstrumentationName))
+                .AddMeter(ApplicationInstrumentationName)
+                .AddMeter(CatalogCacheInstrumentationName))
             .WithTracing(tracing => tracing
                 .AddSource(ApplicationInstrumentationName)
                 .AddAspNetCoreInstrumentation(options =>
