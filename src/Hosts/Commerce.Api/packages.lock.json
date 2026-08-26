@@ -365,6 +365,7 @@
         "type": "Project",
         "dependencies": {
           "Catalog.Application": "[1.0.0, )",
+          "Catalog.Contracts": "[1.0.0, )",
           "Catalog.Domain": "[1.0.0, )",
           "Commerce.Infrastructure": "[1.0.0, )",
           "Dapper": "[2.1.79, )",

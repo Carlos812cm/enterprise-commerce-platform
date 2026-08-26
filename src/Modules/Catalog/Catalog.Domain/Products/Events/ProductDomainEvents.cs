@@ -23,8 +23,10 @@ public sealed record ProductVariantDiscontinuedDomainEvent(
 
 public sealed record ProductPublishedDomainEvent(
     ProductId ProductId,
+    ProductSlug Slug,
     DateTimeOffset OccurredAtUtc) : IDomainEvent;
 
 public sealed record ProductDiscontinuedDomainEvent(
     ProductId ProductId,
+    ProductSlug Slug,
     DateTimeOffset OccurredAtUtc) : IDomainEvent;

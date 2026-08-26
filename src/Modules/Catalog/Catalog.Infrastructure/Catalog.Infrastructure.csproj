@@ -5,6 +5,7 @@
     <ProjectReference Include="..\Catalog.Application\Catalog.Application.csproj" />
     <ProjectReference Include="..\Catalog.Domain\Catalog.Domain.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Commerce.Infrastructure\Commerce.Infrastructure.csproj" />
+    <ProjectReference Include="..\Catalog.Contracts\Catalog.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>
