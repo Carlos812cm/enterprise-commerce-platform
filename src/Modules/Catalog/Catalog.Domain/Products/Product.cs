@@ -621,6 +621,7 @@ public sealed class Product : AggregateRoot<ProductId>
         RaiseDomainEvent(
             new ProductPublishedDomainEvent(
                 Id,
+                Slug,
                 publishedAtUtc));
 
         return Result.Success();
@@ -798,6 +799,7 @@ public sealed class Product : AggregateRoot<ProductId>
         RaiseDomainEvent(
             new ProductDiscontinuedDomainEvent(
                 Id,
+                Slug,
                 discontinuedAtUtc));
 
         return Result.Success();

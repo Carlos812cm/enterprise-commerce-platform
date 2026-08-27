@@ -1,4 +1,3 @@
-using Catalog.Application.Abstractions.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Catalog.Infrastructure.Persistence.Records;
 
@@ -6,13 +5,15 @@ namespace Catalog.Infrastructure.Persistence;
 
 public sealed class CatalogDbContext(
     DbContextOptions<CatalogDbContext> options)
-    : DbContext(options),
-      ICatalogUnitOfWork
+    : DbContext(options)
 {
     public const string Schema = "catalog";
 
     internal DbSet<ProductRecord> ProductRecords =>
         Set<ProductRecord>();
+
+    internal DbSet<OutboxMessageRecord> OutboxMessages =>
+    Set<OutboxMessageRecord>();
 
     protected override void OnModelCreating(
         ModelBuilder modelBuilder)
@@ -25,13 +26,5 @@ public sealed class CatalogDbContext(
 
         modelBuilder.ApplyConfigurationsFromAssembly(
             typeof(CatalogDbContext).Assembly);
-    }
-
-    async Task ICatalogUnitOfWork.SaveChangesAsync(
-        CancellationToken cancellationToken)
-    {
-        _ = await base
-            .SaveChangesAsync(cancellationToken)
-            .ConfigureAwait(false);
     }
 }

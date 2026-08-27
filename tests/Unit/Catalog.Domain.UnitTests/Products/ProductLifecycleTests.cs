@@ -64,8 +64,24 @@ public sealed class ProductLifecycleTests
                 Assert.IsType<ProductVariantActivatedDomainEvent>(
                     domainEvent),
             domainEvent =>
-                Assert.IsType<ProductPublishedDomainEvent>(
-                    domainEvent));
+            {
+                var publishedEvent =
+                    Assert.IsType<ProductPublishedDomainEvent>(
+                        domainEvent);
+
+                Assert.Equal(
+                    product.Id,
+                    publishedEvent.ProductId);
+
+                Assert.Equal(
+                    product.Slug,
+                    publishedEvent.Slug);
+
+                Assert.Equal(
+                    publishedAtUtc,
+                    publishedEvent.OccurredAtUtc);
+            }
+        );
     }
 
     [Fact]

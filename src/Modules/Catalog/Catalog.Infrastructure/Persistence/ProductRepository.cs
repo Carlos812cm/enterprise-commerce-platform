@@ -6,7 +6,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Catalog.Infrastructure.Persistence;
 
 internal sealed class ProductRepository(
-    CatalogDbContext dbContext)
+    CatalogDbContext dbContext,
+    CatalogDomainEventTracker domainEventTracker)
     : IProductRepository
 {
     private readonly Dictionary<
@@ -51,8 +52,8 @@ internal sealed class ProductRepository(
         }
 
         var product =
-            ProductPersistenceMapper
-                .ToDomain(record);
+        ProductPersistenceMapper
+            .ToDomain(record);
 
         _trackedRecords[product.Id] =
             record;
@@ -74,6 +75,8 @@ internal sealed class ProductRepository(
         _trackedRecords.Add(
             product.Id,
             record);
+
+        domainEventTracker.Track(product);
     }
 
     public void Update(Product product)
@@ -91,5 +94,7 @@ internal sealed class ProductRepository(
         ProductPersistenceMapper.Apply(
             product,
             record);
+
+        domainEventTracker.Track(product);
     }
 }

@@ -45,10 +45,12 @@ public static class CatalogInfrastructureServiceCollectionExtensions
             IProductSlugUniquenessChecker,
             ProductSlugUniquenessChecker>();
 
-        services.TryAddScoped<ICatalogUnitOfWork>(
-            static serviceProvider =>
-                serviceProvider
-                    .GetRequiredService<CatalogDbContext>());
+        services.TryAddScoped<
+            ICatalogUnitOfWork,
+            CatalogUnitOfWork>();
+
+        services.TryAddScoped<
+            CatalogDomainEventTracker>();
 
         services.TryAddScoped<
             IProductDetailsReader,
