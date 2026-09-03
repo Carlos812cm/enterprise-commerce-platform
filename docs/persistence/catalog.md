@@ -9,6 +9,7 @@ catalog.products
 catalog.product_options
 catalog.product_variants
 catalog.product_variant_options
+catalog.outbox_messages
 ```
 
 The first migration stores:
@@ -58,6 +59,28 @@ The initial model intentionally ignores:
 
 These will be mapped when their write commands are introduced.
 
+## Transactional Outbox
+
+Product publication persists two independent durable intents:
+
+- `catalog.storefront-product-cache-invalidate.v1`
+- `catalog.product-published.v1`
+
+Aggregate state and both intents are committed by one EF Core
+`SaveChangesAsync` transaction.
+
+Outbox processing occurs after that transaction through `Commerce.Worker`.
+Claims use bounded PostgreSQL leases. External Redis and RabbitMQ calls never
+run inside the aggregate transaction.
+
+The Outbox state includes attempt, next-attempt, lease, processed,
+dead-letter, bounded error-code and W3C trace-context fields.
+
+See:
+
+- [ADR-0036](../adr/0036-use-transactional-outbox-for-catalog-events.md)
+- [ADR-0037](../adr/0037-use-leased-at-least-once-catalog-outbox-processing.md)
+- [Catalog Outbox Runbook](../operations/runbooks/catalog-outbox.md)
 # Migrations
 
 Migrations are generated with the repository-local `dotnet-ef` tool.
@@ -79,6 +102,10 @@ They verify:
 - Aggregate rehydration
 - Slug uniqueness queries
 - Database unique constraints
+- Transactional Product and Outbox persistence
+- Rollback and retry without duplicate Outbox intents
+- Leased claims, fencing, retry scheduling and dead-letter transitions
+- RabbitMQ and Redis adapters against real infrastructure
 
 Product domain aggregate
 ↕ ProductPersistenceMapper

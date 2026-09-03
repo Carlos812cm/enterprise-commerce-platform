@@ -77,6 +77,81 @@ wait_for_command() {
   return 1
 }
 
+apply_catalog_migrations() {
+  local postgres_endpoint=""
+  local postgres_host_port=""
+  local connection_string=""
+  local migration_count=""
+  local outbox_exists=""
+
+  postgres_endpoint="$(
+    docker port \
+      "$postgres_container" \
+      5432 |
+      head -n 1
+  )"
+
+  if [[ ! "$postgres_endpoint" =~ :([0-9]+)$ ]]; then
+    echo "Could not resolve the published PostgreSQL smoke port."
+    return 1
+  fi
+
+  postgres_host_port="${BASH_REMATCH[1]}"
+
+  connection_string="Host=127.0.0.1;Port=$postgres_host_port;Database=commerce;Username=commerce;Password=commerce_dev_password;Pooling=false"
+
+  echo "Applying Catalog migrations to the smoke PostgreSQL database."
+
+  ConnectionStrings__Postgres="$connection_string" \
+    dotnet ef database update \
+      --project src/Modules/Catalog/Catalog.Infrastructure/Catalog.Infrastructure.csproj \
+      --startup-project src/Modules/Catalog/Catalog.Infrastructure/Catalog.Infrastructure.csproj \
+      --context CatalogDbContext \
+      --configuration Release \
+      --no-build
+
+  migration_count="$(
+    docker exec \
+      --env PGPASSWORD=commerce_dev_password \
+      "$postgres_container" \
+      psql \
+      --host 127.0.0.1 \
+      --username commerce \
+      --dbname commerce \
+      --tuples-only \
+      --no-align \
+      --set ON_ERROR_STOP=1 \
+      --command "SELECT COUNT(*) FROM catalog.__ef_migrations_history WHERE \"MigrationId\" = '20260811051042_AddCatalogOutbox';" |
+      tr -d '[:space:]'
+  )"
+
+  outbox_exists="$(
+    docker exec \
+      --env PGPASSWORD=commerce_dev_password \
+      "$postgres_container" \
+      psql \
+      --host 127.0.0.1 \
+      --username commerce \
+      --dbname commerce \
+      --tuples-only \
+      --no-align \
+      --set ON_ERROR_STOP=1 \
+      --command "SELECT to_regclass('catalog.outbox_messages') IS NOT NULL;" |
+      tr -d '[:space:]'
+  )"
+
+  if [[ "$migration_count" != "1" ]]; then
+    echo "Catalog Outbox migration was not recorded in the smoke database."
+    return 1
+  fi
+
+  if [[ "$outbox_exists" != "t" ]]; then
+    echo "Catalog Outbox table was not created in the smoke database."
+    return 1
+  fi
+
+  echo "Catalog smoke database migrations verified."
+}
 wait_for_health() {
   local container_name="$1"
   local health_status=""
@@ -201,6 +276,7 @@ docker run \
   --detach \
   --name "$postgres_container" \
   --network "$network_name" \
+  --publish 127.0.0.1::5432 \
   --env POSTGRES_USER=commerce \
   --env POSTGRES_PASSWORD=commerce_dev_password \
   --env POSTGRES_DB=commerce \
@@ -245,6 +321,8 @@ wait_for_command \
   rabbitmq-diagnostics \
   -q \
   check_port_connectivity
+
+apply_catalog_migrations
 
 validate_non_root "$api_image"
 validate_non_root "$worker_image"
