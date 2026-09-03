@@ -22,6 +22,9 @@ public static class ServiceDefaultsExtensions
     private const string CatalogCacheInstrumentationName =
     "Commerce.Catalog.Cache";
 
+    private const string CatalogOutboxInstrumentationName =
+        "Commerce.Catalog.Outbox";
+
     public static IHostApplicationBuilder AddServiceDefaults(
         this IHostApplicationBuilder builder,
         string serviceName)
@@ -89,9 +92,11 @@ public static class ServiceDefaultsExtensions
                 .AddHttpClientInstrumentation()
                 .AddRuntimeInstrumentation()
                 .AddMeter(ApplicationInstrumentationName)
-                .AddMeter(CatalogCacheInstrumentationName))
+                .AddMeter(CatalogCacheInstrumentationName)
+                .AddMeter(CatalogOutboxInstrumentationName))
             .WithTracing(tracing => tracing
                 .AddSource(ApplicationInstrumentationName)
+                .AddSource(CatalogOutboxInstrumentationName)
                 .AddAspNetCoreInstrumentation(options =>
                 {
                     options.Filter = context =>

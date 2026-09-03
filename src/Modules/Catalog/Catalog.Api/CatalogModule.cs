@@ -22,6 +22,9 @@ public static class CatalogModule
         services.AddCatalogInfrastructure();
 
         services
+            .AddCatalogStorefrontCacheInvalidationSubscriber();
+
+        services
             .AddAuthorizationBuilder()
             .AddPolicy(
                 CatalogAuthorization

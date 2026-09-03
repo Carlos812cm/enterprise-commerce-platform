@@ -42,11 +42,20 @@ Distributed cold-miss coordination will be evaluated under load before flash-sal
 
 ## Invalidation
 
-An explicit invalidation port is introduced.
+An explicit invalidation port is used by the Catalog Outbox processor.
 
-Automatic invalidation is deferred until Domain Events are dispatched transactionally through an Outbox.
+Product publication creates a durable cache-invalidation intent in the same
+PostgreSQL transaction as the aggregate change.
 
-Before publication or product-editing endpoints are exposed, post-commit invalidation is mandatory.
+The Worker first invalidates the `HybridCache` entry and shared Redis L2, then
+publishes a Redis Pub/Sub signal. Each Catalog API instance consumes that
+signal and invalidates its own local L1.
+
+The PostgreSQL Outbox remains the durable source. Redis Pub/Sub is an
+ephemeral cross-process propagation mechanism.
+
+The detailed runtime decision is documented in
+[ADR-0037](0037-use-leased-at-least-once-catalog-outbox-processing.md).
 
 ## HTTP Caching
 
@@ -77,7 +86,10 @@ Benefits:
 
 Costs:
 
-- Temporary staleness is possible until event-driven invalidation exists.
-- Redis availability becomes relevant to storefront performance.
+- A process disconnected from Redis Pub/Sub at publication time can retain its
+  existing L1 value until the bounded local expiration or a later
+  invalidation.
+- Redis availability is relevant to shared caching and invalidation
+  propagation.
 - Serialization compatibility must be managed through cache-key versions.
 - Multi-node simultaneous cold misses remain a future hardening concern.

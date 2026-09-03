@@ -68,6 +68,38 @@ Persistent observability data remains in named Docker volumes unless the environ
 
 The infrastructure clients are now registered and observable. Meaningful dependency spans and metrics will appear as business workflows begin executing database commands, cache operations and broker activity.
 
+### Catalog Outbox
+
+Catalog Outbox processing emits:
+
+- ActivitySource: `Commerce.Catalog.Outbox`
+- Activity: `catalog.outbox.process`
+- Meter: `Commerce.Catalog.Outbox`
+- Counter: `catalog.outbox.message.outcomes`
+- Histogram: `catalog.outbox.processing.duration`
+- Bounded tag: `catalog.outbox.outcome`
+
+Allowed outcome values are:
+
+- `processed`
+- `retry_scheduled`
+- `dead_lettered`
+- `lease_lost`
+
+The processor reconstructs persisted W3C `trace_parent` and `trace_state`
+before decoding or dispatching a message.
+
+A malformed or missing context starts an independent root Activity. It does
+not attach the message to an unrelated ambient trace.
+
+Non-success processing outcomes mark the span as `Error`. Successful
+processing leaves the status `Unset`.
+
+Message IDs, Product IDs, slugs, worker IDs, lease owners and error codes are
+not metric dimensions.
+
+The Worker also emits structured batch summaries containing only bounded
+counts.
 ## Noise Control
 
 Health endpoints are excluded from distributed traces.
@@ -88,7 +120,8 @@ These mechanisms complement each other:
 ## Current Limitations
 
 - Logs are not yet stored in a centralized log backend.
-- The Worker does not yet process message-broker traffic.
-- No business transaction currently exercises all infrastructure clients end to end.
+- External Product Published delivery remains at-least-once.
+- Redis Pub/Sub cannot prove receipt by every API process.
+- Dead-letter replay and Outbox retention are not automated.
 - Tempo uses local single-binary storage.
 - No production retention, alerting or notification policy exists yet.

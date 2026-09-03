@@ -56,6 +56,35 @@ product, the temporary null cache entry is removed immediately. A later request
 therefore executes the source again instead of reusing a cached not-found
 result.
 
+## Cross-Process Invalidation
+
+Publishing a Product creates the durable Outbox intent:
+
+```text
+catalog.storefront-product-cache-invalidate.v1
+```
+
+The Worker processes that intent in this order:
+
+1. Remove the slug entry through the Storefront cache invalidation port.
+2. Publish the canonical slug to the Redis channel
+   `commerce.catalog.storefront-cache-invalidation.v1`.
+3. Mark the Outbox row processed only after both operations succeed.
+
+Each Catalog API instance hosts a subscriber for that channel and invalidates
+its own `HybridCache`. This evicts the process-local L1 that cannot be removed
+by changing Redis L2 alone.
+
+A broadcast call failure is retryable through the PostgreSQL Outbox.
+
+Redis Pub/Sub is not durable. An already-running API process that is
+disconnected at the publication instant can miss the signal and retain its
+existing L1 value until the 30-second local expiration or a later invalidation.
+The shared L2 entry has already been removed before the signal is published.
+
+See
+[ADR-0037](../adr/0037-use-leased-at-least-once-catalog-outbox-processing.md)
+for the delivery and failure semantics.
 ## Telemetry
 
 The `Commerce.Catalog.Cache` meter emits these instruments:

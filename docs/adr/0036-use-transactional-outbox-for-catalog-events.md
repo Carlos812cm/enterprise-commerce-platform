@@ -164,7 +164,10 @@ The Transactional Outbox guarantees atomic persistence of:
 
 It does not provide exactly-once external delivery.
 
-Future Outbox processing uses at-least-once semantics.
+Catalog Outbox processing uses at-least-once semantics.
+
+The runtime design is defined by
+[ADR-0037](0037-use-leased-at-least-once-catalog-outbox-processing.md).
 
 Consequently:
 
@@ -186,12 +189,12 @@ customer identifiers or other high-cardinality telemetry.
 
 Outbox records are not removed when dispatch fails.
 
-Future processors will use:
+The Catalog Outbox processor uses:
 
-- Attempt counters.
-- Retry scheduling.
-- Bounded leases.
-- Dead-letter state.
+- PostgreSQL `FOR UPDATE SKIP LOCKED` claims.
+- Attempt counters and deterministic exponential retry scheduling.
+- Bounded leases and fenced completion or failure writes.
+- Dead-letter state for permanent failures and exhausted retry budgets.
 
 A database transaction must not remain open while performing Redis,
 RabbitMQ or other network I/O.
@@ -247,15 +250,11 @@ Costs:
 
 ## Deferred
 
-This decision does not implement:
+This decision and ADR-0037 do not implement:
 
-- Outbox background processing.
-- RabbitMQ publication.
-- Storefront cache invalidation consumption.
 - Generic Inbox processing.
 - Exactly-once delivery.
 - Distributed sagas.
 - Multi-instance Storefront cold-miss coordination.
+- Automated dead-letter replay.
 - Advanced Outbox retention and archival.
-
-Those capabilities are addressed by subsequent phases.
