@@ -317,12 +317,17 @@ public sealed class ProductAggregatePersistenceTests :
             TestContext.Current
                 .CancellationToken);
 
-        await Assert.ThrowsAsync<
+        var exception =
+            await Assert.ThrowsAsync<
+                CatalogOptimisticConcurrencyException>(
+                () => secondUnitOfWork
+                    .SaveChangesAsync(
+                        TestContext.Current
+                            .CancellationToken));
+
+        Assert.IsType<
             DbUpdateConcurrencyException>(
-            () => secondUnitOfWork
-                .SaveChangesAsync(
-                    TestContext.Current
-                        .CancellationToken));
+            exception.InnerException);
     }
 
     [Fact]

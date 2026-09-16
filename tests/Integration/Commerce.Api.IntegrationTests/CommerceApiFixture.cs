@@ -102,6 +102,15 @@ public sealed class CommerceApiFixture :
         return client;
     }
 
+    public WebApplicationFactory<Program> CreateFactory(
+        Action<IServiceCollection> configureTestServices)
+    {
+        ArgumentNullException.ThrowIfNull(configureTestServices);
+
+        return GetFactory().WithWebHostBuilder(builder =>
+            builder.ConfigureTestServices(configureTestServices));
+    }
+
     public async ValueTask DisposeAsync()
     {
         if (_factory is not null)
