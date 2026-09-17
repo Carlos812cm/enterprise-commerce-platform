@@ -202,6 +202,25 @@ RabbitMQ or other network I/O.
 Claiming work and performing external dispatch are separate operational
 steps.
 
+## Publication Command Retry Boundary (ECP-11G.3)
+
+The same-Unit-of-Work retry scenario documented here is the integration test
+that removes an induced Outbox storage failure before retrying the save. Event
+staging is retained and that retry does not append duplicate intents. It is
+not a guarantee that arbitrary failures or stale versions can be retried in
+place safely.
+
+The publication command added in ECP-11G.3 performs one save. A concurrency
+conflict is translated to a neutral Application exception and then an expected
+conflict result. A new caller attempt uses a fresh request scope and reloads
+committed state; it does not redispatch the command in the failed scope.
+Outbox delivery retries are separate post-commit operations owned by the Worker.
+
+This clarification preserves the original transactional and lower-level retry
+evidence. It does not change staging, leases, delivery or message contracts.
+See [ADR-0038](0038-use-explicit-product-publication-and-neutral-concurrency.md)
+for the Application/HTTP boundary.
+
 ## Testing
 
 The Outbox schema is verified against PostgreSQL 18 through Testcontainers.

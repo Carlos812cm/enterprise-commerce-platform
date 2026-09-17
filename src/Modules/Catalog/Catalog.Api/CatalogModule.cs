@@ -1,5 +1,6 @@
 using Catalog.Api.Authorization;
 using Catalog.Api.Endpoints.Products.CreateDraftProduct;
+using Catalog.Api.Endpoints.Products.PublishProduct;
 using Catalog.Application;
 using Catalog.Infrastructure;
 using Microsoft.AspNetCore.Builder;
@@ -55,6 +56,7 @@ public static class CatalogModule
 
         catalogGroup.MapCreateDraftProduct();
         catalogGroup.MapGetProductById();
+        catalogGroup.MapPublishProduct();
 
         var storefrontGroup =
                 endpoints

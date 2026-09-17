@@ -4,7 +4,7 @@ Proyecto personal de backend para comercio electrónico, desarrollado con **C#, 
 
 **Estado: en desarrollo.** La implementación actual se concentra en el catálogo de productos y su infraestructura de integración. No es una tienda terminada ni se presenta como un sistema comercial en producción.
 
-El alcance documentado corresponde al código integrado hasta **ECP-11G.2 · Catalog Outbox Processing**, [PR #40](https://github.com/Carlos812cm/enterprise-commerce-platform/pull/40). Las funcionalidades previstas y los cambios de ramas en progreso no se consideran entregados.
+Este README describe el código de esta revisión: el baseline **ECP-11G.2 · Catalog Outbox Processing**, [PR #40](https://github.com/Carlos812cm/enterprise-commerce-platform/pull/40), y la publicación de productos de **ECP-11G.3 · Catalog Product Publication**. La presencia del código en una revisión no certifica el cierre de la fase, su integración en `main` ni un despliegue productivo; ese estado debe verificarse en los commits, pull requests y checks de GitHub.
 
 ## Qué demuestra este proyecto
 
@@ -17,7 +17,7 @@ El alcance documentado corresponde al código integrado hasta **ECP-11G.2 · Cat
 
 | Área | Alcance actual |
 | --- | --- |
-| Catálogo | Creación de productos en estado borrador y consulta administrativa por identificador. |
+| Catálogo | Creación de productos en borrador, consulta administrativa por identificador y publicación administrativa de productos preparados. |
 | Consulta pública | Lectura de productos publicados por `slug`, exposición de variantes activas y respuestas condicionales con ETag. |
 | Persistencia | EF Core con PostgreSQL, migraciones, restricciones de unicidad y control de concurrencia optimista. |
 | Autorización | Operaciones administrativas protegidas con Bearer token y permiso `catalog.products.write`; configuración local de identidad con Keycloak. |
@@ -31,11 +31,16 @@ El alcance documentado corresponde al código integrado hasta **ECP-11G.2 · Cat
 | --- | --- | --- |
 | `POST` | `/api/catalog/products` | Protegido. Crea un producto en borrador. |
 | `GET` | `/api/catalog/products/{productId}` | Protegido. Consulta un producto por identificador. |
+| `POST` | `/api/catalog/products/{productId}/publish` | Protegido. Publica un Draft con variantes preparadas, sin cuerpo de solicitud. |
 | `GET` | `/api/storefront/products/{slug}` | Público. Devuelve únicamente productos publicados y sus variantes activas. |
 
-Los dos endpoints administrativos requieren `catalog.products.write`. Consulta los contratos de [creación de productos](docs/api/catalog/create-draft-product.md), [consulta por identificador](docs/api/catalog/get-product-by-id.md) y [consulta pública por slug](docs/api/storefront/get-published-product-by-slug.md).
+Los tres endpoints administrativos requieren `catalog.products.write`. Consulta los contratos de [creación de productos](docs/api/catalog/create-draft-product.md), [consulta por identificador](docs/api/catalog/get-product-by-id.md), [publicación](docs/api/catalog/publish-product.md) y [consulta pública por slug](docs/api/storefront/get-published-product-by-slug.md).
 
-**Límite importante:** existen reglas de publicación en el dominio y procesamiento de eventos de publicación, pero el flujo de publicación todavía no está expuesto como endpoint HTTP en esta versión. Crear un borrador no lo hace visible en la consulta pública.
+**Publicación:** un `200 OK` devuelve `productId`, `status` y `publishedAtUtc` después de confirmar el estado del producto, sus variantes y las dos intenciones Outbox en la misma transacción. No confirma que el Worker haya entregado ya los mensajes externos. Una publicación repetida se rechaza; dos solicitudes que compiten sobre la misma versión no pueden confirmar ambas la escritura.
+
+**Límite importante:** el producto debe estar en Draft y contener al menos una variante Draft. Crear un borrador no lo hace visible en la consulta pública. Los endpoints para definir opciones o agregar y editar variantes todavía no forman parte de esta revisión; las pruebas preparan esos datos mediante el dominio y el repositorio. El control de concurrencia protege la carga y el guardado del servidor, no implementa una precondición de versión enviada por el cliente ni un contrato `Idempotency-Key`.
+
+El [contrato de Application](docs/application/catalog/publish-product.md) y [ADR-0038](docs/adr/0038-use-explicit-product-publication-and-neutral-concurrency.md) describen los errores, la traducción de concurrencia, las transacciones y los límites de reintento. Las pruebas HTTP usan identidades de prueba, no un flujo completo de emisión y validación de JWT con Keycloak real.
 
 ## Arquitectura y tecnologías
 
@@ -178,7 +183,7 @@ Desde la raíz del repositorio, después de restaurar dependencias y con Docker 
 ```powershell
 dotnet format EnterpriseCommercePlatform.slnx --verify-no-changes --no-restore
 dotnet build EnterpriseCommercePlatform.slnx --configuration Release --no-restore
-dotnet test EnterpriseCommercePlatform.slnx --configuration Release --no-restore
+dotnet test --solution EnterpriseCommercePlatform.slnx --configuration Release --no-restore
 ```
 
 El repositorio incluye pruebas unitarias de dominio y aplicación, pruebas de integración con infraestructura real mediante Testcontainers y pruebas de límites arquitectónicos. Los escenarios de integración cubren persistencia, concurrencia, transacciones de Outbox, reintentos y adaptadores de Redis y RabbitMQ.
@@ -187,7 +192,7 @@ El workflow [PR Validation](.github/workflows/pr-validation.yml) también compru
 
 ## Alcance pendiente
 
-El objetivo de evolución incluye el flujo HTTP completo de publicación, los escenarios B2C de carrito y checkout con ventas de alta concurrencia, y los escenarios B2B de catálogos privados y aprobaciones. No se presentan aquí como funcionalidades terminadas.
+El objetivo de evolución incluye los endpoints de preparación y edición de opciones y variantes, los escenarios B2C de carrito y checkout con ventas de alta concurrencia, y los escenarios B2B de catálogos privados y aprobaciones. No se presentan aquí como funcionalidades terminadas. La publicación HTTP documentada arriba no equivale a un flujo administrativo completo de preparación del catálogo.
 
 Tampoco se afirma disponer de una interfaz de tienda completa, integraciones de pago productivas, operación comercial real o resultados de rendimiento a escala. La base técnica permite trabajar hacia esos objetivos, pero no constituye evidencia de haberlos alcanzado.
 

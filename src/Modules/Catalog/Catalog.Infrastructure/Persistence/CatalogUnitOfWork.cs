@@ -1,6 +1,7 @@
 using Catalog.Application.Abstractions.Persistence;
 using Catalog.Infrastructure.Persistence.Outbox;
 using Commerce.Domain;
+using Microsoft.EntityFrameworkCore;
 
 namespace Catalog.Infrastructure.Persistence;
 
@@ -17,9 +18,18 @@ internal sealed class CatalogUnitOfWork(
     {
         StageDomainEvents();
 
-        _ = await dbContext
-            .SaveChangesAsync(cancellationToken)
-            .ConfigureAwait(false);
+        try
+        {
+            _ = await dbContext
+                .SaveChangesAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (DbUpdateConcurrencyException exception)
+        {
+            throw new CatalogOptimisticConcurrencyException(
+                "The Catalog aggregate was modified by another operation.",
+                exception);
+        }
 
         ClearCommittedDomainEvents();
     }
