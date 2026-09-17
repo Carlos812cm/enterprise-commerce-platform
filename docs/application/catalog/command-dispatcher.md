@@ -86,7 +86,9 @@ registration helper supplies `TimeProvider.System`.
 ## Publication Boundary
 
 `PublishProductCommand` is registered and can be invoked through the Application
-dispatcher. Its HTTP endpoint is not implemented yet at ECP-11G.3-B3.2.
+dispatcher. The administrative HTTP endpoint uses this same pipeline; see the
+[Publish Product HTTP contract](../../api/catalog/publish-product.md) for the
+request, authorization, response and error contracts.
 
 The handler loads the aggregate, calls `Product.Publish`, explicitly calls
 repository `Update`, and awaits `ICatalogUnitOfWork.SaveChangesAsync` before
